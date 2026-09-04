@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New World Laboratories — Test Request Form</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --ink:#0c272e;
+  --ink-soft:#44585d;
+  --paper:#f4f8f7;
+  --panel:#ffffff;
+  --line:#d8e3e0;
+  --line-strong:#0c272e;
+  --accent:#16b28b;
+  --accent-dark:#0e8e6d;
+  --accent-tint:#e3f7f1;
+  --warn:#b3791f;
+  --warn-tint:#fbf0dc;
+  --danger:#b3402a;
+  --mono: ui-monospace, "SFMono-Regular", "IBM Plex Mono", Consolas, monospace;
+  --sans: "Segoe UI", "Inter", -apple-system, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  line-height:1.45;
+  padding-bottom:90px;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px 40px;}
+
+.letterhead{background:#ffffff;color:var(--ink);padding:22px 24px;border-bottom:4px solid var(--accent);}
+.letterhead-inner{max-width:1080px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;}
+.brand img{height:44px;width:auto;display:block;}
+.doc-tag{font-family:var(--mono);font-size:11px;color:var(--ink-soft);text-align:right;line-height:1.6;}
+.doc-tag strong{color:var(--ink);display:block;font-size:13px;letter-spacing:.03em;}
+
+.rail{display:flex;background:var(--ink);padding:0 24px;}
+.rail-inner{max-width:1080px;margin:0 auto;display:flex;width:100%;}
+.rail-step{
+  flex:1;padding:11px 4px;text-align:center;font-family:var(--mono);
+  font-size:11px;color:#7c8b96;letter-spacing:.03em;text-transform:uppercase;
+  border-bottom:3px solid transparent;cursor:pointer;user-select:none;
+  background:none;border-top:none;border-left:none;border-right:none;
+}
+.rail-step.active{color:#fff;border-bottom-color:var(--accent);}
+.rail-step.done{color:#c8d3d6;}
+.rail-step span{display:block;font-size:15px;color:var(--accent);margin-bottom:2px;font-weight:700;}
+.rail-check{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;}
+.rail-check.complete{background:var(--accent);}
+.draft-banner{background:var(--accent-tint);border-bottom:1px solid var(--accent);padding:10px 24px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;}
+.draft-banner-actions{display:flex;gap:8px;flex-shrink:0;}
+.draft-banner span:first-child{font-size:13px;color:var(--ink);}
+.rail-step.active span{color:var(--accent);}
+
+.step-page{display:none;}
+.step-page.active{display:block;}
+.panel{background:var(--panel);border:1px solid var(--line-strong);margin-top:22px;}
+.panel-head{display:flex;align-items:baseline;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--paper);}
+.panel-num{font-family:var(--mono);font-weight:700;font-size:13px;color:#fff;background:var(--ink);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.panel-head h2{margin:0;font-size:16px;font-weight:700;}
+.panel-head .hint{margin-left:auto;font-size:12px;color:var(--ink-soft);font-style:italic;}
+.panel-body{padding:20px;}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid.g3{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;position:relative;}
+.field.full{grid-column:1/-1;}
+.field.hidden{display:none;}
+label{font-size:12px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
+label .req{color:var(--accent-dark);}
+.field-label-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;}
+.inline-toggle{display:flex;align-items:center;gap:6px;font-weight:500;text-transform:none;font-size:12px;color:var(--ink-soft);cursor:pointer;letter-spacing:0;}
+.inline-toggle input{width:auto;margin:0;}
+input[type=text],input[type=email],input[type=tel],input[type=date],textarea,select{
+  font-family:var(--sans);font-size:14px;padding:9px 10px;border:1px solid #b9c4c1;background:#fff;color:var(--ink);width:100%;
+}
+input:disabled{background:var(--paper);color:var(--ink-soft);}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+textarea{resize:vertical;min-height:70px;font-family:var(--sans);}
+select{appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%230c272e"/></svg>');background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
+
+.suggestions{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line-strong);z-index:30;max-height:230px;overflow-y:auto;display:none;box-shadow:0 6px 14px rgba(12,39,46,.15);}
+.suggestions.show{display:block;}
+.suggestion-item{padding:9px 11px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--paper);}
+.suggestion-item:last-child{border-bottom:none;}
+.suggestion-item:hover,.suggestion-item.hi{background:var(--accent-tint);}
+.suggestion-item small{display:block;color:var(--ink-soft);font-family:var(--mono);font-size:11px;margin-top:2px;}
+.powered-by{font-size:10px;color:var(--ink-soft);margin-top:3px;}
+
+.btn{font-family:var(--sans);font-weight:600;font-size:13px;padding:9px 16px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer;letter-spacing:.01em;}
+.btn:hover{background:var(--paper);}
+.btn-accent{background:var(--accent);border-color:var(--accent-dark);color:#fff;}
+.btn-accent:hover{background:var(--accent-dark);}
+.btn-ghost{border-color:var(--line);color:var(--ink-soft);}
+.btn-ghost:hover{background:var(--paper);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.tm-row{display:grid;grid-template-columns:34px 1fr 34px;gap:10px;align-items:start;padding:12px 0;border-bottom:1px dashed var(--line);}
+.tm-row:last-child{border-bottom:none;}
+.tm-index{font-family:var(--mono);font-weight:700;color:var(--accent-dark);text-align:center;font-size:15px;padding-top:8px;}
+.remove-btn{align-self:start;background:none;border:1px solid var(--line);color:var(--ink-soft);width:28px;height:28px;cursor:pointer;font-size:15px;line-height:1;margin-top:2px;}
+.remove-btn:hover{border-color:var(--danger);color:var(--danger);}
+.add-row-btn{margin-top:14px;}
+.email-row{display:flex;gap:8px;margin-bottom:8px;}
+.email-row input{flex:1;}
+
+.tm-legend{margin-top:16px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);font-size:12px;color:var(--ink-soft);}
+.tm-legend strong{color:var(--ink);}
+.tm-legend div{margin-top:4px;}
+.tm-legend b{font-family:var(--mono);color:var(--accent-dark);}
+
+.table-scroll{overflow-x:auto;border:1px solid var(--line-strong);}
+@media(min-width:900px){
+  #panel-3 .panel{
+    width:96vw;
+    position:relative;
+    left:50%;
+    transform:translateX(-50%);
+    box-sizing:border-box;
+  }
+}
+table.sample-table{border-collapse:collapse;width:100%;font-size:12.5px;background:#fff;}
+table.sample-table th, table.sample-table td{border:1px solid var(--line);padding:6px 8px;vertical-align:top;background:#fff;}
+table.sample-table thead th{background:var(--ink);color:#fff;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap;vertical-align:bottom;}
+table.sample-table th.test-col{text-align:center;width:30px;min-width:30px;padding:6px 3px;height:280px;}
+table.sample-table th.test-col .tcl{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;font-size:10px;font-family:var(--mono);letter-spacing:.01em;text-transform:none;display:inline-block;}
+table.sample-table td.test-col{text-align:center;width:30px;min-width:30px;padding:6px 2px;}
+table.sample-table td.test-col input{width:auto;}
+table.sample-table .sticky-col{position:sticky;background:#fff;z-index:5;}
+table.sample-table thead .sticky-col{background:var(--ink);z-index:6;}
+table.sample-table .col-num{left:0;width:34px;min-width:34px;text-align:center;}
+table.sample-table .col-id{left:34px;min-width:140px;box-shadow:2px 0 4px rgba(12,39,46,.08);}
+.tbl-input{padding:5px 6px;font-size:12.5px;min-width:90px;}
+.tbl-select{padding:5px 6px;font-size:12.5px;min-width:110px;background-position:right 6px center;padding-right:20px;}
+.tbl-other{margin-top:4px;padding:5px 6px;font-size:12px;min-width:100px;}
+tfoot td{background:var(--paper);font-weight:700;font-family:var(--mono);text-align:center;}
+tfoot td.sticky-col{background:var(--paper);}
+.empty-note{color:var(--ink-soft);font-size:13px;font-style:italic;padding:10px 0;}
+.mini-copy{font-family:var(--sans);font-weight:500;font-size:9.5px;text-transform:none;letter-spacing:0;padding:2px 6px;margin-top:3px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#fff;cursor:pointer;}
+.mini-copy:hover{background:rgba(255,255,255,.2);}
+.core-notice{background:var(--warn-tint);border:1px solid var(--warn);padding:14px 16px;margin-bottom:16px;}
+.core-notice > strong{color:var(--warn);display:block;margin-bottom:4px;font-size:13.5px;}
+.core-notice p{margin:0;font-size:13px;color:var(--ink);}
+.core-notice p strong{color:var(--ink);}
+
+.estimate-box{margin-top:20px;padding:16px 18px;background:var(--accent-tint);border:1px solid var(--accent);}
+.estimate-head{font-weight:700;font-size:14px;margin-bottom:10px;color:var(--accent-dark);}
+.estimate-head .hint{font-weight:400;font-size:11px;color:var(--ink-soft);font-style:italic;text-transform:none;letter-spacing:0;}
+.estimate-line{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--ink);}
+.estimate-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-top:1px dashed var(--line);margin-top:6px;color:var(--ink);}
+.estimate-row.total{font-weight:700;font-size:15px;border-top:2px solid var(--accent-dark);margin-top:8px;padding-top:8px;color:var(--accent-dark);}
+.estimate-disclaimer{background:var(--warn-tint);border:1px solid var(--warn);padding:14px 16px;margin-bottom:20px;}
+.estimate-disclaimer > strong{color:var(--warn);display:block;margin-bottom:6px;font-size:13.5px;}
+.estimate-disclaimer p{margin:0;font-size:12.5px;color:var(--ink);line-height:1.55;}
+.estimate-disclaimer p strong{color:var(--ink);}
+.est-section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);margin:18px 0 8px;}
+.review-kv{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;font-size:13px;}
+.review-kv .rkv-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dashed var(--line);}
+.review-kv .rkv-row span:first-child{color:var(--ink-soft);font-weight:600;}
+.review-kv .rkv-row span:last-child{text-align:right;color:var(--ink);}
+.review-kv.full-width{grid-template-columns:1fr;}
+table.review-kv-table{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:6px;}
+table.review-kv-table td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+table.review-kv-table td.rkv-label{font-weight:700;color:var(--ink-soft);width:160px;white-space:nowrap;}
+table.est-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:6px;}
+table.est-table th{background:var(--ink);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.02em;text-align:left;padding:7px 10px;}
+table.est-table th:not(:first-child), table.est-table td:not(:first-child){text-align:right;}
+table.est-table th:nth-child(2), table.est-table td:nth-child(2){width:110px;}
+table.est-table th:nth-child(3), table.est-table td:nth-child(3){width:70px;}
+table.est-table th:nth-child(4), table.est-table td:nth-child(4){width:120px;}
+table.est-table td{padding:6px 10px;border-bottom:1px solid var(--line);background:#fff;}
+table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
+
+.decl-box{background:var(--paper);border:1px solid var(--line);padding:16px;font-size:13px;color:var(--ink-soft);margin-bottom:16px;}
+.decl-check{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border:1px solid var(--ink);background:#fff;}
+.decl-check input{margin-top:3px;width:16px;height:16px;flex-shrink:0;}
+.decl-check label{text-transform:none;font-size:13.5px;font-weight:500;letter-spacing:0;color:var(--ink);}
+
+.navbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line-strong);padding:12px 20px;z-index:40;}
+.navbar-inner{max-width:1080px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:14px;}
+.navbar-status{font-size:12px;color:var(--ink-soft);font-family:var(--mono);}
+
+.errors{background:#fbeceA;border:1px solid var(--danger);color:var(--danger);padding:12px 16px;font-size:13px;margin-top:18px;display:none;}
+.errors.show{display:block;}
+.errors ul{margin:6px 0 0;padding-left:18px;}
+
+#confirm-overlay,#warn-overlay{position:fixed;inset:0;background:rgba(12,39,46,.72);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
+#confirm-overlay.show,#warn-overlay.show{display:flex;}
+.confirm-card{background:#fff;max-width:480px;width:100%;border-top:5px solid var(--accent);padding:28px 26px;}
+.confirm-card h3{margin:0 0 10px;font-size:18px;}
+.confirm-card p{font-size:13.5px;color:var(--ink-soft);}
+.confirm-card ol{font-size:13.5px;color:var(--ink);padding-left:20px;}
+.confirm-card ol li{margin-bottom:6px;}
+.confirm-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
+.warn-card{background:#fff;max-width:440px;width:100%;border-top:5px solid var(--warn);padding:26px 26px;}
+.warn-card h3{margin:0 0 12px;font-size:16px;color:var(--warn);display:flex;align-items:center;gap:8px;}
+.warn-card p{font-size:13.5px;color:var(--ink);line-height:1.55;}
+
+@media(max-width:720px){
+  .grid,.grid.g3{grid-template-columns:1fr;}
+  .rail-step{font-size:9px;}
+  body{padding-bottom:120px;}
+}
+</style>
+</head>
+<body>
+
+<div class="letterhead">
+  <div class="letterhead-inner">
+    <div class="brand"><img src="data:image/jpeg;base64,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aFuvNMT7DL+aXsZQXo3E2U5gRAss4GLwqsbJxl78ButjdoZRSAwFiSWYG8WnC6fVeqvZ/u6ZN73tjmIcpUKhiVBHZBdPDYqFuDR0beUp76HvmKJ2WwzvM2rqIACJuwLpjoI6aIrlJvENuvZGfu3hxJDsQsN4JuOSreyy8YnfQIjRQ1hHFu4AuspCVJLlR1IC9pxxUpol0CX2KillTTi+JHgbKmeHyq32YA6Onvv303JwMPc4t0TPb5GUvVWWV2U3munhRjgbImJGwi2hdWZKR+rnERSvAArQehYeQgCLT6d10i28SU+AqPMqBeZC5DZC2TbGgqEu5cWwmShjdkrp5zxFYb2y7LLmSPELhRkqyLN2y22mam7KgTAJK7AbrAaChFowWReCZQziTNSdNzImWXYGOtK2VeuQZeaTq9iAChToVwAbyxC6Re4p5pNH6v8AAbAtqz5oGQESUXD4HDoAgdqAkJJLhkvK71aYI5N6HO037g7UVslbIERHSLUm1YRnZTcseZO7pJdRv3BgCYAnMB0qVqRtC2wQSrunKgihIlE8LBBGyoWkSLKgBnWOcOEkp6ki4GEoWeQAWQIvQawfFzpwLJ2cggaioAh2C0t+rep9RgRVNzZQni29HRBrgQefV3aXFvoLp27QxfboadN/osveczfR+qlYR+u5kvUgxl5hfIIF+Upuo40nITjSdbYAGwaCZtULELOdt6K+FgPvvuDYjQ2thgSHNczf6aAN1LS5mSQj2oCQkmY4JyO+kl3yRLmI826bdS1CHXesURhKmSbNiXxojFkI4SrLEwyXrHt0wW0OpInhTM6khJhwySUdABAFgDAHT+NRWgTX7d+K/bvxX7d+K/bvxX7d+KYIUPImvObV+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fiv278V+3fijQYozLBLtseBzhIfP+GFChQoUKFChQoUKFChQoUKFChQoUKFChQoUKFChQoUKFf8hQoUKFChQoUKIT4FxErIYf7X/9oADAMBAAIRAxEAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA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" alt="New World Laboratories"></div>
+    <div class="doc-tag"><strong>Client Test Request Form</strong><span id="trRefDisplay" style="display:block;font-size:10px;margin-top:2px;"></span></div>
+  </div>
+</div>
+
+<div id="draftBanner" class="draft-banner" style="display:none;">
+  <span id="draftBannerText"></span>
+  <div class="draft-banner-actions">
+    <button type="button" class="btn btn-sm btn-accent" id="restoreDraftBtn">Restore draft</button>
+    <button type="button" class="btn btn-sm btn-ghost" id="discardDraftBtn">Start fresh</button>
+  </div>
+</div>
+
+<div class="rail">
+  <div class="rail-inner">
+    <button type="button" class="rail-step active" data-step="1"><span>01</span>Client &amp; Project<i class="rail-check" id="railCheck1"></i></button>
+    <button type="button" class="rail-step" data-step="2"><span>02</span>Test Methods<i class="rail-check" id="railCheck2"></i></button>
+    <button type="button" class="rail-step" data-step="3"><span>03</span>Samples<i class="rail-check" id="railCheck3"></i></button>
+    <button type="button" class="rail-step" data-step="4"><span>04</span>Remarks</button>
+    <button type="button" class="rail-step" data-step="5"><span>05</span>Review</button>
+    <button type="button" class="rail-step" data-step="6"><span>06</span>Declaration<i class="rail-check" id="railCheck6"></i></button>
+  </div>
+</div>
+
+<form id="trForm" autocomplete="on" onsubmit="event.preventDefault(); return false;">
+<div class="wrap">
+
+
+  <!-- STEP 1 -->
+  <div class="step-page active" id="panel-1">
+  <div class="panel">
+    <div class="panel-head"><div class="panel-num">1</div><h2>Client &amp; Project Details</h2></div>
+    <div class="panel-body">
+      <div id="templateSection" style="margin-bottom:18px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);margin-bottom:8px;">Regular client? Save time next visit</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="templateSelect" style="flex:1;min-width:200px;"></select>
+          <button type="button" class="btn btn-sm" id="loadTemplateBtn">Load</button>
+          <button type="button" class="btn btn-sm btn-ghost" id="deleteTemplateBtn">Delete</button>
+          <button type="button" class="btn btn-sm btn-accent" id="saveTemplateBtn">Save current as template</button>
+        </div>
+        <p style="font-size:11px;color:var(--ink-soft);margin:8px 0 0;">Saves client details and test methods only — not Project Name, Location, or Samples, since those change each time. Saved in this browser only.</p>
+      </div>
+      <div class="grid">
+        <div class="field"><label>Client name to be invoiced <span class="req">*</span></label><input type="text" id="clientInvoice" name="clientInvoice" autocomplete="organization" required></div>
+        <div class="field">
+          <div class="field-label-row">
+            <label>Client name to appear on report <span class="req">*</span></label>
+            <label class="inline-toggle"><input type="checkbox" id="sameAsInvoice" checked> Same as invoiced name</label>
+          </div>
+          <input type="text" id="clientReport" name="clientReport" required disabled>
+        </div>
+
+        <div class="field full" style="position:relative;">
+          <label>Client street address <span class="req">*</span></label>
+          <input type="text" id="streetAddress" name="streetAddress" autocomplete="address-line1" placeholder="e.g. 12 Example Street" required>
+        </div>
+        <div class="field" style="position:relative;">
+          <label>Suburb <span class="req">*</span></label>
+          <input type="text" id="suburb" name="suburb" autocomplete="address-level2" placeholder="Start typing…" required>
+          <div class="suggestions" id="suburbSuggestions"></div>
+          <div class="powered-by">Suburb lookup via OpenStreetMap · Australia only</div>
+        </div>
+        <div class="field"><label>State <span class="req">*</span></label>
+          <select name="state" id="state" autocomplete="address-level1" required>
+            <option value="">Select…</option>
+            <option>WA</option><option>NSW</option><option>VIC</option><option>QLD</option>
+            <option>SA</option><option>TAS</option><option>ACT</option><option>NT</option>
+          </select>
+        </div>
+        <div class="field"><label>Postcode <span class="req">*</span></label><input type="text" id="postcode" name="postcode" autocomplete="postal-code" inputmode="numeric" maxlength="4" required></div>
+
+        <div class="field"><label>Project Name <span class="req">*</span></label><input type="text" id="project" name="project" required></div>
+        <div class="field"><label>Project Location <span class="req">*</span></label><input type="text" id="location" name="location" required></div>
+        <div class="field"><label>Client contact number</label><input type="tel" id="contactNumber" name="contactNumber" autocomplete="tel"></div>
+        <div class="field"><label>PO number <span class="hint" style="font-weight:400;text-transform:none;">(required before testing commences)</span></label><input type="text" id="poNumber" name="poNumber"></div>
+        <div class="field"><label>TRN / Ref #</label><input type="text" id="trnRef" name="trnRef" placeholder="Your own tracking or reference number"></div>
+
+        <div class="field"><label>NWL quote provided?</label>
+          <select name="quoteProvided" id="quoteProvided"><option value="">Select…</option><option>Yes</option><option>No</option></select>
+        </div>
+        <div class="field hidden" id="quoteNumberField"><label>Quote number</label>
+          <div style="display:flex;">
+            <span style="display:flex;align-items:center;padding:0 10px;background:var(--paper);border:1px solid #b9c4c1;border-right:none;font-family:var(--mono);font-weight:700;color:var(--ink-soft);">QU-</span>
+            <input type="text" id="quoteNumber" name="quoteNumber" inputmode="numeric" placeholder="12345" style="border-left:none;">
+          </div>
+        </div>
+
+        <div class="field full">
+          <label>NWL Contact Person <span class="hint" style="font-weight:400;text-transform:none;">(if known)</span></label>
+          <select name="nwlContact" id="nwlContact">
+            <option value="">Please select the NWL staff member you have been communicating with…</option>
+            <option>Curwin Boltman</option>
+            <option>Badar Alesri</option>
+            <option>Savin Weerasinghe</option>
+            <option>Stella Chou</option>
+          </select>
+        </div>
+
+        <div class="field"><label>Submitted by <span class="req">*</span></label><input type="text" id="submittedBy" name="submittedBy" autocomplete="name" required></div>
+        <div class="field"><label>Your email <span class="req">*</span> <span class="hint" style="font-weight:400;text-transform:none;">(we'll cc you)</span></label><input type="email" id="submitterEmail" name="submitterEmail" autocomplete="email" required></div>
+        <div class="field"><label>Sampled by</label>
+          <select name="sampledBy" id="sampledBy"><option value="">Select…</option><option>Client</option><option>NWL Field Technician</option><option>Third-party consultant</option><option>Other</option></select>
+        </div>
+        <div class="field"><label>Date sampled</label><input type="date" id="dateSampled" name="dateSampled"></div>
+        <div class="field"><label>Testing urgency</label>
+          <select name="urgency" id="urgency"><option value="">Select…</option><option>Standard</option><option>Priority (24–48hr)</option><option>Urgent (same day)</option></select>
+        </div>
+        <div class="field full">
+          <div class="field-label-row">
+            <label>Email reports to <span class="req">*</span></label>
+            <label class="inline-toggle"><input type="checkbox" id="sameAsSubmitter"> Same as your email</label>
+          </div>
+          <div id="reportEmailList"></div>
+          <button type="button" class="btn btn-sm" id="addEmailBtn">+ Add recipient</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step-page" id="panel-2">
+  <div class="panel">
+    <div class="panel-head"><div class="panel-num">2</div><h2>Test Methods</h2><span class="hint">Type to search — e.g. "compaction" or "AS 1289"</span></div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--ink-soft);margin-top:0;">Search by standard, method number, or test name. Can't find it? Just type the test name and method number and leave it — that's treated as a custom entry. If left unspecified, testing will default to AS test methods.</p>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:-6px 0 16px;"><strong>Test method not available in the list?</strong> Note it in the Remarks section (Step 4) instead — NWL will contact you regarding the method and whether we can facilitate it.</p>
+      <div id="tmList"></div>
+      <button type="button" class="btn add-row-btn" id="addTmBtn">+ Add test method</button>
+      <div class="tm-legend" id="tmLegend" style="display:none;"><strong>Selected test methods</strong><div id="tmLegendBody"></div></div>
+    </div>
+  </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step-page" id="panel-3">
+  <div class="panel">
+    <div class="panel-head"><div class="panel-num">3</div><h2>Samples</h2></div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--ink-soft);margin-top:0;">Tick which test methods (added in Step 2) apply to each sample. Column headers show the test code — scroll right to see all of them.</p>
+      <div class="table-scroll">
+        <table class="sample-table" id="sampleTable">
+          <thead><tr id="sampleHeadRow"></tr></thead>
+          <tbody id="sampleTableBody"></tbody>
+          <tfoot><tr id="sampleTotalsRow"></tr></tfoot>
+        </table>
+      </div>
+      <button type="button" class="btn add-row-btn" id="addSampleBtn">+ Add sample</button>
+      <button type="button" class="btn btn-ghost add-row-btn" id="duplicateSampleBtn">⧉ Duplicate last sample</button>
+    </div>
+  </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step-page" id="panel-4">
+  <div class="panel">
+    <div class="panel-head"><div class="panel-num">4</div><h2>Remarks and/or Other Details</h2></div>
+    <div class="panel-body">
+      <div class="core-notice" id="coreNotice" style="display:none;">
+        <strong>Production / Batch Report Required</strong>
+        <p>A production or batch report is required to complete core testing and reporting. Please upload it with this Test Request, or forward it to NWL once received from your client.</p>
+      </div>
+      <div class="field full">
+        <label>Anything else we should know?</label>
+        <textarea id="remarks" style="min-height:160px;" placeholder="e.g. site access instructions, special handling requirements, related job numbers…"></textarea>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step-page" id="panel-5">
+  <div class="panel">
+    <div class="panel-head"><div class="panel-num">5</div><h2>Review Your Request</h2></div>
+    <div class="panel-body">
+      <p style="font-size:12.5px;color:var(--ink-soft);margin-top:0;">This mirrors the PDF report NWL will receive. Check everything below before continuing to the declaration. Use the rail above or the Back button to fix anything.</p>
+      <div id="reviewWarnings"></div>
+
+      <div class="est-section-title">Client &amp; Project</div>
+      <table class="review-kv-table" id="reviewClientProjectTable">
+        <tbody id="reviewClientProject"></tbody>
+      </table>
+
+      <div class="est-section-title">Samples &amp; Testing</div>
+      <div class="table-scroll">
+        <table class="sample-table" id="reviewSampleTable" style="font-size:11px;">
+          <thead><tr id="reviewSampleHead"></tr></thead>
+          <tbody id="reviewSampleRows"></tbody>
+          <tfoot><tr id="reviewSampleTotals"></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="est-section-title">Remarks and/or Other Details</div>
+      <div id="reviewRemarks" style="font-size:13px;color:var(--ink);padding:8px 0;"></div>
+
+      <div class="est-section-title">Declaration</div>
+      <div class="decl-box" style="font-size:12.5px;margin-bottom:0;">
+        By submitting this Test Request Form, the Client confirms that the information provided is complete and accurate and authorises New World Laboratories to undertake the requested services. The Client acknowledges that testing will be performed in accordance with NWL's Client Service &amp; Commercial Terms, and that additional charges may apply where work varies from the original request or where additional services are required.
+        <br><br>
+        The Client declares that the submitted sample(s) are free from asbestos and any other harmful or hazardous substances, to the best of their knowledge.
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step-page" id="panel-6">
+  <div class="panel">
+    <div class="panel-head"><div class="panel-num">6</div><h2>Declaration &amp; Submit</h2></div>
+    <div class="panel-body">
+      <div class="decl-box">
+        By submitting this Test Request Form, the Client confirms that the information provided is complete and accurate and authorises New World Laboratories to undertake the requested services. The Client acknowledges that testing will be performed in accordance with NWL's Client Service &amp; Commercial Terms, and that additional charges may apply where work varies from the original request or where additional services are required.
+      </div>
+      <div class="decl-check">
+        <input type="checkbox" id="declAccept">
+        <label for="declAccept">I have read and agree to the declaration above, and confirm the details in this request are correct. <span class="req">*</span></label>
+      </div>
+      <div class="decl-check" style="margin-top:10px;">
+        <input type="checkbox" id="declHazMat">
+        <label for="declHazMat">I declare that the submitted sample(s) are free from asbestos and any other harmful or hazardous substances, to the best of my knowledge. <span class="req">*</span></label>
+      </div>
+      <div class="core-notice" style="border-color:var(--danger);background:#fbeceA;">
+        <strong style="color:var(--danger);">Important — the PDF is NOT attached automatically.</strong>
+        <p>Submitting downloads a PDF copy of this request and opens a pre-addressed email — <strong>you must attach the downloaded PDF yourself</strong> before sending it. Please check the PDF is correct first, then attach it to the email draft and hit send. If anything's wrong, click <strong>Back</strong> to return to the Samples step, make your changes, then come back through and submit again.</p>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="errors" id="errorBox"><strong>Please fix the following before submitting:</strong><ul id="errorList"></ul></div>
+
+</div>
+</form>
+
+<div class="navbar">
+  <div class="navbar-inner">
+    <button type="button" class="btn btn-ghost" id="backBtn">← Back</button>
+    <div class="navbar-status" id="navStatus">Step 1 of 5</div>
+    <button type="button" class="btn btn-accent" id="nextBtn">Next →</button>
+    <button type="button" class="btn btn-accent" id="submitBtn" style="display:none;padding:9px 22px;">Submit Test Request →</button>
+  </div>
+</div>
+
+<div id="confirm-overlay">
+  <div class="confirm-card">
+    <h3>Your PDF has been downloaded</h3>
+    <p style="background:#fbeceA;border:1px solid var(--danger);padding:10px 12px;color:var(--ink);"><strong>The PDF was NOT automatically attached to the email.</strong> You need to attach it yourself — see step 2 below.</p>
+    <p>To finish sending your request:</p>
+    <ol>
+      <li><strong>Check the downloaded PDF is correct.</strong></li>
+      <li>An email draft is about to open, addressed to New World Laboratories (with a copy to you and any other recipients you added).</li>
+      <li><strong>Attach the PDF that just downloaded</strong> to your device — it will not attach itself.</li>
+      <li>Hit send in your email app.</li>
+    </ol>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-accent" id="openEmailBtn">Open email draft →</button>
+      <button type="button" class="btn btn-ghost" id="closeConfirmBtn">Close</button>
+    </div>
+    <p style="font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line);margin:18px 0 0;padding-top:12px;"><strong>PDF report incorrect?</strong> Click Close below, then click Back to return to Samples and make the required changes.</p>
+  </div>
+</div>
+
+<div id="warn-overlay">
+  <div class="warn-card">
+    <h3>⚠ Heads up</h3>
+    <p id="warnMessage"></p>
+    <div class="confirm-actions"><button type="button" class="btn btn-accent" id="warnOkBtn">Got it</button></div>
+  </div>
+</div>
+
+<script>
+const TEST_DATA = [{"standard":"AS","method":"1012.1 - Sampling","combo":"AS 1012.1 - Sampling"},{"standard":"AS","method":"1012.12.1 - Mass per Unit Volume","combo":"AS 1012.12.1 - Mass per Unit Volume"},{"standard":"AS","method":"1012.14 \u2013 Testing of Cores","combo":"AS 1012.14 \u2013 Testing of Cores"},{"standard":"AS","method":"1012.2 - Laboratory Concrete Mixes","combo":"AS 1012.2 - Laboratory Concrete Mixes"},{"standard":"AS","method":"1012.3.1 - Slump","combo":"AS 1012.3.1 - Slump"},{"standard":"AS","method":"1012.8.1 - Making & Curing Compression Test Specimens","combo":"AS 1012.8.1 - Making & Curing Compression Test Specimens"},{"standard":"AS","method":"1012.9 - Compressive Strength","combo":"AS 1012.9 - Compressive Strength"},{"standard":"AS","method":"1141.11.1 - Particle Size Distribution","combo":"AS 1141.11.1 - Particle Size Distribution"},{"standard":"AS","method":"1141.12 - Material Finer than 75 Micron","combo":"AS 1141.12 - Material Finer than 75 Micron"},{"standard":"AS","method":"1141.14 - Particle Shape by Proportional Caliper","combo":"AS 1141.14 - Particle Shape by Proportional Caliper"},{"standard":"AS","method":"1141.15 - Flakiness Index","combo":"AS 1141.15 - Flakiness Index"},{"standard":"AS","method":"1141.18 \u2013 Crushed Faces","combo":"AS 1141.18 \u2013 Crushed Faces"},{"standard":"AS","method":"1141.20.1 - Average Least Dimension","combo":"AS 1141.20.1 - Average Least Dimension"},{"standard":"AS","method":"1141.20.2 - Average Least Dimension","combo":"AS 1141.20.2 - Average Least Dimension"},{"standard":"AS","method":"1141.21 - Aggregate Crushing Value","combo":"AS 1141.21 - Aggregate Crushing Value"},{"standard":"AS","method":"1141.22 - Wet/Dry Strength Variation","combo":"AS 1141.22 - Wet/Dry Strength Variation"},{"standard":"AS","method":"1141.23 - Los Angeles Value","combo":"AS 1141.23 - Los Angeles Value"},{"standard":"AS","method":"1141.24 \u2013 Sodium Sulphate Soundness","combo":"AS 1141.24 \u2013 Sodium Sulphate Soundness"},{"standard":"AS","method":"1141.27 - Resistance to Wear by Attrition","combo":"AS 1141.27 - Resistance to Wear by Attrition"},{"standard":"AS","method":"1141.29 - Accelerated Soundness Index","combo":"AS 1141.29 - Accelerated Soundness Index"},{"standard":"AS","method":"1141.3.1 - Sampling 3.1","combo":"AS 1141.3.1 - Sampling 3.1"},{"standard":"AS","method":"1141.32 \u2013 Weak Particles","combo":"AS 1141.32 \u2013 Weak Particles"},{"standard":"AS","method":"1141.33 - Clay & Fine Silt","combo":"AS 1141.33 - Clay & Fine Silt"},{"standard":"AS","method":"1141.34 \u2013 Organic Impurities other than sugar","combo":"AS 1141.34 \u2013 Organic Impurities other than sugar"},{"standard":"AS","method":"1141.4 - Bulk Density","combo":"AS 1141.4 - Bulk Density"},{"standard":"AS","method":"1141.42 \u2013 Pendulum Skid Resistance","combo":"AS 1141.42 \u2013 Pendulum Skid Resistance"},{"standard":"AS","method":"1141.5 - Particle Density & Water Absorption - Fine","combo":"AS 1141.5 - Particle Density & Water Absorption - Fine"},{"standard":"AS","method":"1141.50 - Resistance to Stripping","combo":"AS 1141.50 - Resistance to Stripping"},{"standard":"AS","method":"1141.6.1 - Particle Density & Water Absorption - Coarse","combo":"AS 1141.6.1 - Particle Density & Water Absorption - Coarse"},{"standard":"AS","method":"1142.60.1 - Potetial alkai-silica reactivity-accelerated mortar bar method","combo":"AS 1142.60.1 - Potetial alkai-silica reactivity-accelerated mortar bar method"},{"standard":"AS","method":"1289.0 - Definitions and General Requirments","combo":"AS 1289.0 - Definitions and General Requirments"},{"standard":"AS","method":"1289.1.1 - Sample Preparation","combo":"AS 1289.1.1 - Sample Preparation"},{"standard":"AS","method":"1289.1.2.1 - Sampling 1.2.1","combo":"AS 1289.1.2.1 - Sampling 1.2.1"},{"standard":"AS","method":"1289.1.4.1 - Site Selection - Random Numbers","combo":"AS 1289.1.4.1 - Site Selection - Random Numbers"},{"standard":"AS","method":"1289.1.4.2 - Site Selection - Random Stratified Numbers","combo":"AS 1289.1.4.2 - Site Selection - Random Stratified Numbers"},{"standard":"AS","method":"1289.2.1.1 - Moisture Content","combo":"AS 1289.2.1.1 - Moisture Content"},{"standard":"AS","method":"1289.3.1.1 - Liquid Limit - Four Point Casagrande","combo":"AS 1289.3.1.1 - Liquid Limit - Four Point Casagrande"},{"standard":"AS","method":"1289.3.1.2 - Liquid Limit - One Point Casagrande","combo":"AS 1289.3.1.2 - Liquid Limit - One Point Casagrande"},{"standard":"AS","method":"1289.3.2.1 - Plastic Limit","combo":"AS 1289.3.2.1 - Plastic Limit"},{"standard":"AS","method":"1289.3.3.1 - Plasticity Index - Casagrande","combo":"AS 1289.3.3.1 - Plasticity Index - Casagrande"},{"standard":"AS","method":"1289.3.3.2 - Plasticity Index - Cone Penetrometer","combo":"AS 1289.3.3.2 - Plasticity Index - Cone Penetrometer"},{"standard":"AS","method":"1289.3.4.1 - Linear Shrinkage","combo":"AS 1289.3.4.1 - Linear Shrinkage"},{"standard":"AS","method":"1289.3.6.1 - Particle Size Distribution","combo":"AS 1289.3.6.1 - Particle Size Distribution"},{"standard":"AS","method":"1289.3.6.3 \u2013 PSD Fine Particles \u2013 Hydrometer","combo":"AS 1289.3.6.3 \u2013 PSD Fine Particles \u2013 Hydrometer"},{"standard":"AS","method":"1289.3.8.1 - Emerson Class Number","combo":"AS 1289.3.8.1 - Emerson Class Number"},{"standard":"AS","method":"1289.3.8.2 \u2013 Determination of the percent dispersion of a soil","combo":"AS 1289.3.8.2 \u2013 Determination of the percent dispersion of a soil"},{"standard":"AS","method":"1289.3.9.1 - Liquid Limit - Four Point Cone Penetrometer","combo":"AS 1289.3.9.1 - Liquid Limit - Four Point Cone Penetrometer"},{"standard":"AS","method":"1289.3.9.2 - Liquid Limit - One Point Cone Penetrometer","combo":"AS 1289.3.9.2 - Liquid Limit - One Point Cone Penetrometer"},{"standard":"AS","method":"1289.4.1.1 \u2013 Organic Content Matter of a Soil","combo":"AS 1289.4.1.1 \u2013 Organic Content Matter of a Soil"},{"standard":"AS","method":"1289.4.2.1 \u2013 Sulphate Content","combo":"AS 1289.4.2.1 \u2013 Sulphate Content"},{"standard":"AS","method":"1289.4.3.1 \u2013 pH Level of a Soil","combo":"AS 1289.4.3.1 \u2013 pH Level of a Soil"},{"standard":"AS","method":"1289.4.4.1 - Electrical Resistivity","combo":"AS 1289.4.4.1 - Electrical Resistivity"},{"standard":"AS","method":"1289.5.1.1 - Standard Compaction","combo":"AS 1289.5.1.1 - Standard Compaction"},{"standard":"AS","method":"1289.5.2.1 - Modified Compaction","combo":"AS 1289.5.2.1 - Modified Compaction"},{"standard":"AS","method":"1289.5.4.1 - Dry Density Ratio, Moisture Variation & Moisture Ratio","combo":"AS 1289.5.4.1 - Dry Density Ratio, Moisture Variation & Moisture Ratio"},{"standard":"AS","method":"1289.5.4.2 - Assignment of OMC & MDD","combo":"AS 1289.5.4.2 - Assignment of OMC & MDD"},{"standard":"AS","method":"1289.5.8.1 - Field Nuclear Density","combo":"AS 1289.5.8.1 - Field Nuclear Density"},{"standard":"AS","method":"1289.6.1.1 - California Bearing Ratio (Soaked)","combo":"AS 1289.6.1.1 - California Bearing Ratio (Soaked)"},{"standard":"AS","method":"1289.6.3.2 - Dynamic Cone Penetrometer","combo":"AS 1289.6.3.2 - Dynamic Cone Penetrometer"},{"standard":"AS","method":"1289.6.3.3 - Perth Sand Penetrometer","combo":"AS 1289.6.3.3 - Perth Sand Penetrometer"},{"standard":"AS","method":"1289.6.7.1 - Permeability - Constant Head","combo":"AS 1289.6.7.1 - Permeability - Constant Head"},{"standard":"AS","method":"1289.6.7.2 - Permeability - Falling Head","combo":"AS 1289.6.7.2 - Permeability - Falling Head"},{"standard":"AS","method":"1289.6.9.1 \u2013 Clegg Impact Value","combo":"AS 1289.6.9.1 \u2013 Clegg Impact Value"},{"standard":"AS","method":"1289.7.1.1 - Shrink Swell Index","combo":"AS 1289.7.1.1 - Shrink Swell Index"},{"standard":"AS","method":"1290.3.8.3 - Pinhole","combo":"AS 1290.3.8.3 - Pinhole"},{"standard":"AS","method":"2341.10 - Rolling Thin Film Oven Test","combo":"AS 2341.10 - Rolling Thin Film Oven Test"},{"standard":"AS","method":"2341.12 - Determination of Penetration","combo":"AS 2341.12 - Determination of Penetration"},{"standard":"AS","method":"2341.15 - Distillation of Cutback Bitument","combo":"AS 2341.15 - Distillation of Cutback Bitument"},{"standard":"AS","method":"2341.18 - Softening Point (Ring & Ball)","combo":"AS 2341.18 - Softening Point (Ring & Ball)"},{"standard":"AS","method":"2341.20 - Determination of Sieve Residue for Bituminos Materials","combo":"AS 2341.20 - Determination of Sieve Residue for Bituminos Materials"},{"standard":"AS","method":"2341.21 - Sample Preparation","combo":"AS 2341.21 - Sample Preparation"},{"standard":"AS","method":"2341.22 \u2013 Determination of Particle Charge","combo":"AS 2341.22 \u2013 Determination of Particle Charge"},{"standard":"AS","method":"4133.4.1 \u2013 Point Load Strength \u2013 Index","combo":"AS 4133.4.1 \u2013 Point Load Strength \u2013 Index"},{"standard":"AS","method":"4489.6.1 - Lime Index - Available Lime (Not on Scope)","combo":"AS 4489.6.1 - Lime Index - Available Lime (Not on Scope)"},{"standard":"AS","method":"2341.14 - Determination of flashpoint of bitumen","combo":"AS 2341.14 - Determination of flashpoint of bitumen"},{"standard":"ATM","method":"-111 Handling Viscosity of Polymer Modified Binders (Brookfield Thermosel)","combo":"ATM-111 Handling Viscosity of Polymer Modified Binders (Brookfield Thermosel)"},{"standard":"ATM","method":"-112 Flash Point of Polymer Modified Binders","combo":"ATM-112 Flash Point of Polymer Modified Binders"},{"standard":"ATM","method":"-122 Torsional Recovery of Polymer Modified Binders","combo":"ATM-122 Torsional Recovery of Polymer Modified Binders"},{"standard":"ASNZS","method":"2341.2 - Determination of dynamic viscosity by vacuum capillary viscometer","combo":"ASNZS 2341.2 - Determination of dynamic viscosity by vacuum capillary viscometer"},{"standard":"ASNZS","method":"2341.23 - Residue From Evaporation","combo":"ASNZS 2341.23 - Residue From Evaporation"},{"standard":"ASNZS","method":"2341.4 - Determination of dynamic viscosity by rotational viscometer","combo":"ASNZS 2341.4 - Determination of dynamic viscosity by rotational viscometer"},{"standard":"ASNZS","method":"2341.8 - Determination of matter insoluble in toluene","combo":"ASNZS 2341.8 - Determination of matter insoluble in toluene"},{"standard":"ASNZS","method":"2891.3.2 - Binder content and aggregate grading - Centrifugal extraction method","combo":"ASNZS 2891.3.2 - Binder content and aggregate grading - Centrifugal extraction method"},{"standard":"ASNZS","method":"2891.9.1 - Determination of bulk density of compacted asphalt - Waxing procedure","combo":"ASNZS 2891.9.1 - Determination of bulk density of compacted asphalt - Waxing procedure"},{"standard":"AGPT","method":"- T053 - Repeat Load Triaxial (RLT)","combo":"AGPT - T053 - Repeat Load Triaxial (RLT)"},{"standard":"AGPT","method":"- T102 - Protocol for Handling Polymer Modified Binders","combo":"AGPT - T102 - Protocol for Handling Polymer Modified Binders"},{"standard":"AGPT","method":"- T108 - Segregation of Polymer Modified Binders","combo":"AGPT - T108 - Segregation of Polymer Modified Binders"},{"standard":"AGPT","method":"- T111 - Handling Viscosity of Polymer Modified Binders (Brookfield Thermosel)","combo":"AGPT - T111 - Handling Viscosity of Polymer Modified Binders (Brookfield Thermosel)"},{"standard":"AGPT","method":"- T112 - Flash Point of Polymer Modified Binders","combo":"AGPT - T112 - Flash Point of Polymer Modified Binders"},{"standard":"AGPT","method":"- T122 - Torsional Recovery of Polymer Modified Binders","combo":"AGPT - T122 - Torsional Recovery of Polymer Modified Binders"},{"standard":"AGPT","method":"- T131 - Softening Point","combo":"AGPT - T131 - Softening Point"},{"standard":"AGPT","method":"- T143 - Moisture Content \u2013 Crumbed Rubber","combo":"AGPT - T143 - Moisture Content \u2013 Crumbed Rubber"},{"standard":"AGPT","method":"- T160 - Handling Bitumens, Bituminous Emulsions & Cutback Bitumens in Preparation for Laboratory Testing","combo":"AGPT - T160 - Handling Bitumens, Bituminous Emulsions & Cutback Bitumens in Preparation for Laboratory Testing"},{"standard":"WA","method":"0.1 - Random Sample Site Location","combo":"WA 0.1 - Random Sample Site Location"},{"standard":"WA","method":"100.1 - Sampling","combo":"WA 100.1 - Sampling"},{"standard":"WA","method":"105.1 - Sample Preparation","combo":"WA 105.1 - Sample Preparation"},{"standard":"WA","method":"110.1 - Moisture Content","combo":"WA 110.1 - Moisture Content"},{"standard":"WA","method":"115.1 - Particle Size Distribution","combo":"WA 115.1 - Particle Size Distribution"},{"standard":"WA","method":"115.2 - Abbreviated Particle Size Distribution","combo":"WA 115.2 - Abbreviated Particle Size Distribution"},{"standard":"WA","method":"120.1 - Liquid Limit - Four Point Casagrande","combo":"WA 120.1 - Liquid Limit - Four Point Casagrande"},{"standard":"WA","method":"120.2 - Liquid Limit - Four Point Cone Penetrometer","combo":"WA 120.2 - Liquid Limit - Four Point Cone Penetrometer"},{"standard":"WA","method":"121.1 - Plastic Limit","combo":"WA 121.1 - Plastic Limit"},{"standard":"WA","method":"122.1 - Plasticity Index","combo":"WA 122.1 - Plasticity Index"},{"standard":"WA","method":"123.1 - Linear Shrinkage","combo":"WA 123.1 - Linear Shrinkage"},{"standard":"WA","method":"132.1 - Standard Compaction - Fine & Medium Grained Soils","combo":"WA 132.1 - Standard Compaction - Fine & Medium Grained Soils"},{"standard":"WA","method":"132.2 - Standard Compaction - Coarse Grained Soils","combo":"WA 132.2 - Standard Compaction - Coarse Grained Soils"},{"standard":"WA","method":"133.1 - Modified Compaction - Fine & Medium Grained Soils","combo":"WA 133.1 - Modified Compaction - Fine & Medium Grained Soils"},{"standard":"WA","method":"133.2 - Modified Compaction - Coarse Grained Soils","combo":"WA 133.2 - Modified Compaction - Coarse Grained Soils"},{"standard":"WA","method":"134.1 - Dry Density Ratio","combo":"WA 134.1 - Dry Density Ratio"},{"standard":"WA","method":"136.1 - Moisture Ratio","combo":"WA 136.1 - Moisture Ratio"},{"standard":"WA","method":"140.1 - Maximum Dry Compressive Strength","combo":"WA 140.1 - Maximum Dry Compressive Strength"},{"standard":"WA","method":"141.1 - California Bearing Ratio (Soaked)","combo":"WA 141.1 - California Bearing Ratio (Soaked)"},{"standard":"WA","method":"142.1 - Western Australian Confined Compression Test","combo":"WA 142.1 - Western Australian Confined Compression Test"},{"standard":"WA","method":"142.2 - Repeat Load Triaxial (RLT)","combo":"WA 142.2 - Repeat Load Triaxial (RLT)"},{"standard":"WA","method":"143.1 - Unconfined Compressive Strength","combo":"WA 143.1 - Unconfined Compressive Strength"},{"standard":"WA","method":"144.1 \u2013 Foreign Materials","combo":"WA 144.1 \u2013 Foreign Materials"},{"standard":"WA","method":"145.1 \u2013 Fractured Faces","combo":"WA 145.1 \u2013 Fractured Faces"},{"standard":"WA","method":"200.1 - Sampling Procedures for Aggregates","combo":"WA 200.1 - Sampling Procedures for Aggregates"},{"standard":"WA","method":"201.1 - Sampling and Preparation of Granulated Rubber","combo":"WA 201.1 - Sampling and Preparation of Granulated Rubber"},{"standard":"WA","method":"210.1 - Particle Size Distribution","combo":"WA 210.1 - Particle Size Distribution"},{"standard":"WA","method":"212.1 - Moisture Content","combo":"WA 212.1 - Moisture Content"},{"standard":"WA","method":"215.1 \u2013 Average Least Dimension","combo":"WA 215.1 \u2013 Average Least Dimension"},{"standard":"WA","method":"216.1 - Flakiness Index","combo":"WA 216.1 - Flakiness Index"},{"standard":"WA","method":"220.1 - Los Angeles Value","combo":"WA 220.1 - Los Angeles Value"},{"standard":"WA","method":"220.2 - Los Angeles Value - Crushed Limestone","combo":"WA 220.2 - Los Angeles Value - Crushed Limestone"},{"standard":"WA","method":"235.1 \u2013 Bulk Density \u2013 Crumbed Rubber","combo":"WA 235.1 \u2013 Bulk Density \u2013 Crumbed Rubber"},{"standard":"WA","method":"236.1 \u2013 Particle Size Distribution \u2013 Crumbed Rubber","combo":"WA 236.1 \u2013 Particle Size Distribution \u2013 Crumbed Rubber"},{"standard":"WA","method":"237.1 \u2013 Metallic Ion Content","combo":"WA 237.1 \u2013 Metallic Ion Content"},{"standard":"WA","method":"250.1 \u2013 Colour of Aggregate","combo":"WA 250.1 \u2013 Colour of Aggregate"},{"standard":"WA","method":"310.1 \u2013 Pendulum Skid Resistance","combo":"WA 310.1 \u2013 Pendulum Skid Resistance"},{"standard":"WA","method":"311.1 \u2013 Sand Texture Depth","combo":"WA 311.1 \u2013 Sand Texture Depth"},{"standard":"WA","method":"324.2 - Field Nuclear Density","combo":"WA 324.2 - Field Nuclear Density"},{"standard":"WA","method":"335.1 \u2013 Hydraulic Conductivity","combo":"WA 335.1 \u2013 Hydraulic Conductivity"},{"standard":"WA","method":"701.1 - Sampling & Storage","combo":"WA 701.1 - Sampling & Storage"},{"standard":"WA","method":"705.1-Clause 6.2.1 - Layer Thickness","combo":"WA 705.1-Clause 6.2.1 - Layer Thickness"},{"standard":"WA","method":"733.1 - Bulk Density & Void Content","combo":"WA 733.1 - Bulk Density & Void Content"},{"standard":"WA","method":"732.2 - Maximum Density of Asphalt - Rice Method","combo":"WA 732.2 - Maximum Density of Asphalt - Rice Method"},{"standard":"WA","method":"915.1 - Calcium Carbonate Content","combo":"WA 915.1 - Calcium Carbonate Content"},{"standard":"RLBMA","method":"- RLBMA Section 3 Appendix A - Compressive Strength & Mass per Unit Volume of Reconstituted Limestone Blocks","combo":"RLBMA - RLBMA Section 3 Appendix A - Compressive Strength & Mass per Unit Volume of Reconstituted Limestone Blocks"},{"standard":"ASTM","method":"- D 2974 - Organic Content","combo":"ASTM - D 2974 - Organic Content"},{"standard":"ASTM","method":"- F 1815 \u2013 Rootzone Hydraulic Cond, Bulk Density etc","combo":"ASTM - F 1815 \u2013 Rootzone Hydraulic Cond, Bulk Density etc"},{"standard":"AAT","method":"\u2013 Accelerated Abration Test","combo":"AAT \u2013 Accelerated Abration Test"},{"standard":"BSEN","method":"12945:2014 Neutralising Value","combo":"BSEN 12945:2014 Neutralising Value"},{"standard":"T239","method":"\u2013 Fractured Faces","combo":"T239 \u2013 Fractured Faces"},{"standard":"T276","method":"(RMS) - Limits of Foreign Material","combo":"T276 (RMS) - Limits of Foreign Material"},{"standard":"Calcium","method":"Calcium Content","combo":"Calcium Content"},{"standard":"Magnesium","method":"Magnesium Content","combo":"Magnesium Content"},{"standard":"Sodium","method":"Sodium Content","combo":"Sodium Content"},{"standard":"AS","method":"2891.13.1 - Resilient Modulus - Indirect Tensile Strength (ITM)","combo":"AS 2891.13.1 - Resilient Modulus - Indirect Tensile Strength (ITM)"},{"standard":"AGPT","method":"- T274 - Flexural Stiffness and Fatigue Performance - 3 beams","combo":"AGPT - T274 - Flexural Stiffness and Fatigue Performance - 3 beams"},{"standard":"AS","method":"2341.24 - Calculation of Non-Aqueous Volatiles Content","combo":"AS 2341.24 - Calculation of Non-Aqueous Volatiles Content"},{"standard":"AS","method":"2341.26 - Sieve Residue @ 150um or 710um","combo":"AS 2341.26 - Sieve Residue @ 150um or 710um"},{"standard":"AS","method":"2341.27 - Sedimentation","combo":"AS 2341.27 - Sedimentation"},{"standard":"AS","method":"2341.29 - Setting Time - Breaking Behaviour","combo":"AS 2341.29 - Setting Time - Breaking Behaviour"},{"standard":"AS","method":"2341.32 - pH Value","combo":"AS 2341.32 - pH Value"},{"standard":"WA","method":"910.1 - Chlorides and Total Soluble Salts in Soil and Water","combo":"WA 910.1 - Chlorides and Total Soluble Salts in Soil and Water"},{"standard":"AS","method":"4489.6.1 (In-house Method) - Cement Content","combo":"AS 4489.6.1 (In-house Method) - Cement Content"}];
+const LAB_EMAIL = "lisa.mcconachy@nwlabs.com.au";
+const TR_REFERENCE = 'TR-' + (function(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+})();
+document.getElementById('trRefDisplay').textContent = 'Ref: ' + TR_REFERENCE;
+const STATE_ABBR = {'Western Australia':'WA','New South Wales':'NSW','Victoria':'VIC','Queensland':'QLD','South Australia':'SA','Tasmania':'TAS','Australian Capital Territory':'ACT','Northern Territory':'NT'};
+const DESCRIPTION_OPTIONS = ['Bitumen','Mortar','Limestone Block','Asphalt Core','Water','Gravel','Sandy GRAVEL','Sand','Silty Sand','Ferricrete Gravel','Crushed Limestone','Crushed Rock','Aggregate Chip','Clay','Silt','DG Asphalt','Emulsion','Rubber Modified Bitumen','Polymer Modified Bitumen','Asphalt Slab','Concrete'];
+const PROPOSED_USE_OPTIONS = ['Site compliance testing','General fill','Structural fill','Engineered fill','Subgrade','Subbase','Basecourse','Concrete aggregate','Asphalt aggregate','Sealing aggregate','Production QA'];
+const MDD_WARNINGS = {
+  'AS 1289.6.1.1 - California Bearing Ratio (Soaked)': 'MDD is required for CBR testing. Please request MDD testing or provide an existing MDD result.',
+  'WA 141.1 - California Bearing Ratio (Soaked)': 'MDD is required for CBR testing. Please request MDD testing or provide an existing MDD result.',
+  'AGPT - T053 - Repeat Load Triaxial (RLT)': 'MDD is required for RLT testing. Please request MDD testing or provide an existing MDD result.',
+  'WA 142.2 - Repeat Load Triaxial (RLT)': 'MDD is required for RLT testing. Please request MDD testing or provide an existing MDD result.'
+};
+
+let warnDismissCallback = null;
+function showWarning(msg, onDismiss){
+  document.getElementById('warnMessage').textContent = msg;
+  warnDismissCallback = onDismiss || null;
+  document.getElementById('warn-overlay').classList.add('show');
+}
+document.getElementById('warnOkBtn').addEventListener('click', ()=>{
+  document.getElementById('warn-overlay').classList.remove('show');
+  if(warnDismissCallback){ const cb = warnDismissCallback; warnDismissCallback = null; cb(); }
+});
+
+/* ============ STEP NAVIGATION ============ */
+let currentStep = 1;
+const TOTAL_STEPS = 6;
+function showStep(n){
+  currentStep = n;
+  for(let i=1;i<=TOTAL_STEPS;i++) document.getElementById('panel-'+i).classList.toggle('active', i===n);
+  document.querySelectorAll('.rail-step').forEach(el=>{
+    const s = parseInt(el.dataset.step,10);
+    el.classList.toggle('active', s===n);
+    el.classList.toggle('done', s<n);
+  });
+  document.getElementById('navStatus').textContent = `Step ${n} of ${TOTAL_STEPS}`;
+  document.getElementById('backBtn').style.visibility = n===1 ? 'hidden' : 'visible';
+  document.getElementById('nextBtn').style.display = n===TOTAL_STEPS ? 'none' : 'inline-block';
+  document.getElementById('submitBtn').style.display = n===TOTAL_STEPS ? 'inline-block' : 'none';
+  if(n === 5) renderReview();
+  updateRailIndicators();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('.rail-step').forEach(el=> el.addEventListener('click', ()=> showStep(parseInt(el.dataset.step,10))));
+document.getElementById('backBtn').addEventListener('click', ()=>{ if(currentStep>1) showStep(currentStep-1); });
+document.getElementById('nextBtn').addEventListener('click', ()=>{
+  if(currentStep === 2){
+    const standards = new Set();
+    Object.values(tmRows).forEach(t=>{
+      if(!t.value || !t.value.trim()) return;
+      if(t.matched){ standards.add(t.matched.standard); }
+      else{
+        const m = t.value.trim().match(/^([A-Za-z]+)\b/);
+        if(m) standards.add(m[1].toUpperCase());
+      }
+    });
+    if(standards.size > 1){
+      const list = [...standards].join(', ');
+      showWarning(`You've selected test methods from multiple standards: ${list}. Most test requests use a single standard (e.g. WA only) — please double check this is intentional.`, ()=>{
+        if(currentStep < TOTAL_STEPS) showStep(currentStep+1);
+      });
+      return;
+    }
+  }
+  if(currentStep < TOTAL_STEPS) showStep(currentStep+1);
+});
+
+/* ============ SAME AS INVOICE NAME ============ */
+const sameChk = document.getElementById('sameAsInvoice');
+const clientInvoiceEl = document.getElementById('clientInvoice');
+const clientReportEl = document.getElementById('clientReport');
+function syncReportName(){
+  if(sameChk.checked){ clientReportEl.value = clientInvoiceEl.value; clientReportEl.disabled = true; }
+  else{ clientReportEl.disabled = false; }
+}
+sameChk.addEventListener('change', syncReportName);
+clientInvoiceEl.addEventListener('input', ()=>{ if(sameChk.checked) clientReportEl.value = clientInvoiceEl.value; });
+
+/* ============ QUOTE PROVIDED TOGGLE ============ */
+const quoteProvidedEl = document.getElementById('quoteProvided');
+const quoteNumberField = document.getElementById('quoteNumberField');
+quoteProvidedEl.addEventListener('change', ()=>{
+  quoteNumberField.classList.toggle('hidden', quoteProvidedEl.value !== 'Yes');
+});
+document.getElementById('quoteNumber').addEventListener('input', (e)=>{
+  e.target.value = e.target.value.replace(/\D/g,'');
+});
+
+/* ============ SUBURB AUTOCOMPLETE (AU) ============ */
+const suburbInput = document.getElementById('suburb');
+const suburbBox = document.getElementById('suburbSuggestions');
+const stateSelect = document.getElementById('state');
+const postcodeInput = document.getElementById('postcode');
+let suburbDebounce;
+suburbInput.addEventListener('input', ()=>{
+  clearTimeout(suburbDebounce);
+  const q = suburbInput.value.trim();
+  if(q.length < 3){ suburbBox.classList.remove('show'); return; }
+  suburbDebounce = setTimeout(()=> fetchSuburb(q), 400);
+});
+async function fetchSuburb(q){
+  try{
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=au&addressdetails=1&limit=8&q=${encodeURIComponent(q + ', Australia')}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if(!Array.isArray(data)){ suburbBox.classList.remove('show'); return; }
+    const seen = new Set();
+    const items = [];
+    data.forEach(d=>{
+      const a = d.address || {};
+      const name = a.suburb || a.town || a.city || a.village || a.municipality || a.county;
+      if(!name) return;
+      const stateFull = a.state || '';
+      const abbr = STATE_ABBR[stateFull] || stateFull;
+      const postcode = a.postcode || '';
+      const key = name + '|' + abbr + '|' + postcode;
+      if(seen.has(key)) return;
+      seen.add(key);
+      items.push({name, abbr, postcode});
+    });
+    if(items.length === 0){ suburbBox.classList.remove('show'); return; }
+    suburbBox.innerHTML = items.map((it,i)=>`<div class="suggestion-item" data-i="${i}">${it.name}<small>${it.abbr}${it.postcode ? ' · ' + it.postcode : ''}</small></div>`).join('');
+    suburbBox._items = items;
+    suburbBox.classList.add('show');
+  }catch(e){ suburbBox.classList.remove('show'); }
+}
+suburbBox.addEventListener('click', (e)=>{
+  const item = e.target.closest('.suggestion-item');
+  if(!item) return;
+  const it = suburbBox._items[parseInt(item.dataset.i,10)];
+  suburbInput.value = it.name;
+  if(it.abbr) stateSelect.value = it.abbr;
+  if(it.postcode) postcodeInput.value = it.postcode;
+  suburbBox.classList.remove('show');
+});
+document.addEventListener('click', (e)=>{ if(e.target !== suburbInput && !suburbBox.contains(e.target)) suburbBox.classList.remove('show'); });
+
+/* ============ EMAIL REPORT RECIPIENTS ============ */
+let emailCount = 0;
+let primaryEmailRowId = null;
+const reportEmails = {};
+function buildEmailRow(isPrimary){
+  emailCount++;
+  const id = emailCount;
+  if(isPrimary) primaryEmailRowId = id;
+  reportEmails[id] = '';
+  const row = document.createElement('div');
+  row.className = 'email-row';
+  row.id = 'email-'+id;
+  row.innerHTML = `<input type="email" ${isPrimary?'id="primaryReportEmail" name="primaryReportEmail"':'name="reportEmail'+id+'"'} autocomplete="email" placeholder="name@company.com.au" ${isPrimary?'required':''}>` +
+    (isPrimary ? '' : '<button type="button" class="remove-btn" title="Remove">✕</button>');
+  document.getElementById('reportEmailList').appendChild(row);
+  const inp = row.querySelector('input');
+  inp.addEventListener('input', ()=> reportEmails[id] = inp.value);
+  if(!isPrimary) row.querySelector('.remove-btn').addEventListener('click', ()=>{ delete reportEmails[id]; row.remove(); });
+}
+document.getElementById('addEmailBtn').addEventListener('click', ()=> buildEmailRow(false));
+
+const sameAsSubmitterChk = document.getElementById('sameAsSubmitter');
+const submitterEmailEl = document.getElementById('submitterEmail');
+function syncPrimaryReportEmail(){
+  const primaryInput = document.getElementById('primaryReportEmail');
+  if(!primaryInput) return;
+  if(sameAsSubmitterChk.checked){
+    primaryInput.value = submitterEmailEl.value;
+    primaryInput.disabled = true;
+    reportEmails[primaryEmailRowId] = submitterEmailEl.value;
+  } else {
+    primaryInput.disabled = false;
+  }
+}
+sameAsSubmitterChk.addEventListener('change', syncPrimaryReportEmail);
+submitterEmailEl.addEventListener('input', ()=>{ if(sameAsSubmitterChk.checked) syncPrimaryReportEmail(); });
+
+/* ============ TEST METHODS (typeahead) ============ */
+let tmCount = 0;
+const tmRows = {}; // id -> {value, matched: TEST_DATA item or null}
+
+function searchTests(q){
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  if(words.length === 0) return [];
+  return TEST_DATA.filter(d=>{
+    const hay = d.combo.toLowerCase();
+    return words.every(w=> hay.includes(w));
+  }).slice(0,40);
+}
+
+function buildTmRow(){
+  tmCount++;
+  const id = tmCount;
+  tmRows[id] = {value:'', matched:null};
+  const row = document.createElement('div');
+  row.className = 'tm-row';
+  row.id = 'tm-'+id;
+  row.innerHTML = `
+    <div class="tm-index">${id}</div>
+    <div class="field" style="position:relative;">
+      <label>Test method</label>
+      <input type="text" data-role="search" autocomplete="off" placeholder="e.g. 'compaction', 'AS 1289', 'CBR'…">
+      <div class="suggestions" data-role="suggestions"></div>
+    </div>
+    <button type="button" class="remove-btn" title="Remove">✕</button>
+  `;
+  document.getElementById('tmList').appendChild(row);
+
+  const input = row.querySelector('[data-role="search"]');
+  const box = row.querySelector('[data-role="suggestions"]');
+
+  input.addEventListener('input', ()=>{
+    tmRows[id].value = input.value;
+    tmRows[id].matched = null;
+    const q = input.value.trim();
+    if(q.length < 2){ box.classList.remove('show'); updateLegend(); refreshSampleColumns(); return; }
+    const results = searchTests(q);
+    if(results.length === 0){ box.classList.remove('show'); updateLegend(); refreshSampleColumns(); return; }
+    box.innerHTML = results.map((r,i)=>`<div class="suggestion-item" data-i="${i}">${r.combo}</div>`).join('');
+    box._items = results;
+    box.classList.add('show');
+    updateLegend();
+    refreshSampleColumns();
+  });
+  box.addEventListener('click', (e)=>{
+    const item = e.target.closest('.suggestion-item');
+    if(!item) return;
+    const r = box._items[parseInt(item.dataset.i,10)];
+    input.value = r.combo;
+    tmRows[id].value = r.combo;
+    tmRows[id].matched = r;
+    box.classList.remove('show');
+    updateLegend();
+    refreshSampleColumns();
+    if(MDD_WARNINGS[r.combo]) showWarning(MDD_WARNINGS[r.combo]);
+  });
+  document.addEventListener('click', (e)=>{ if(e.target !== input && !box.contains(e.target)) box.classList.remove('show'); });
+
+  row.querySelector('.remove-btn').addEventListener('click', ()=>{
+    delete tmRows[id]; row.remove(); updateLegend(); refreshSampleColumns();
+  });
+}
+
+function tmLabel(id){
+  const t = tmRows[id];
+  if(!t) return '';
+  return t.value && t.value.trim() ? t.value.trim() : '(new test method)';
+}
+function tmShortLabel(id){
+  const t = tmRows[id];
+  if(!t || !t.value || !t.value.trim()) return '(new)';
+  const combo = t.matched ? t.matched.combo : t.value.trim();
+  const parts = combo.split(/\s[-\u2013]\s/);
+  let label;
+  if(parts.length >= 2){
+    label = parts[0] + ' – ' + parts.slice(1).join(' - ');
+  } else {
+    label = combo;
+  }
+  return label.length > 38 ? label.slice(0,37) + '…' : label;
+}
+function tmFullLabel(id){
+  const t = tmRows[id];
+  if(!t || !t.value || !t.value.trim()) return '(new test method)';
+  return t.matched ? t.matched.combo : t.value.trim();
+}
+
+function updateLegend(){
+  const legend = document.getElementById('tmLegend');
+  const body = document.getElementById('tmLegendBody');
+  const ids = Object.keys(tmRows);
+  if(ids.length === 0){ legend.style.display = 'none'; return; }
+  legend.style.display = 'block';
+  body.innerHTML = ids.map(id => `<div><b>${id}.</b> ${tmLabel(id)}</div>`).join('');
+}
+
+document.getElementById('addTmBtn').addEventListener('click', buildTmRow);
+
+/* ============ SAMPLES (table) ============ */
+let sampleCount = 0;
+const sampleRows = {};
+
+function optionsHtml(list, current){
+  return '<option value="">Select…</option>' + list.map(o=>`<option value="${o}" ${current===o?'selected':''}>${o}</option>`).join('') + `<option value="__other__" ${current==='__other__'?'selected':''}>Other…</option>`;
+}
+
+function buildSampleRow(){
+  sampleCount++;
+  const id = sampleCount;
+  sampleRows[id] = {clientId:'', depth:'', dateSampled:'', description:'', descOther:'', proposedUse:'', useOther:'', density:'', checks:new Set()};
+  renderSampleTable();
+}
+function removeSample(id){ delete sampleRows[id]; renderSampleTable(); }
+function refreshSampleColumns(){ renderSampleTable(); }
+
+function renderSampleTable(){
+  const head = document.getElementById('sampleHeadRow');
+  const body = document.getElementById('sampleTableBody');
+  const totals = document.getElementById('sampleTotalsRow');
+  const tmIds = Object.keys(tmRows);
+
+  head.innerHTML = `
+    <th class="sticky-col col-num">#</th>
+    <th class="sticky-col col-id">Client Sample ID</th>
+    <th>Depth (m)</th>
+    <th>Date Sampled<br><button type="button" class="btn-sm mini-copy" data-copy="dateSampled">Same as #1</button></th>
+    <th>Description<br><button type="button" class="btn-sm mini-copy" data-copy="description">Same as #1</button></th>
+    <th>Proposed Use<br><button type="button" class="btn-sm mini-copy" data-copy="proposedUse">Same as #1</button></th>
+    <th>Comments / Density / OMC / Surcharge</th>
+    ${tmIds.map(tid=>`<th class="test-col" title="${tmLabel(tid).replace(/"/g,'&quot;')}"><span class="tcl">${tmShortLabel(tid).replace(/</g,'&lt;')}</span></th>`).join('')}
+    <th></th>
+  `;
+  head.querySelectorAll('[data-copy]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const which = btn.dataset.copy;
+      if(which === 'dateSampled') copyFirstToAll(['dateSampled']);
+      else if(which === 'description') copyFirstToAll(['description','descOther']);
+      else if(which === 'proposedUse') copyFirstToAll(['proposedUse','useOther']);
+    });
+  });
+
+  body.innerHTML = '';
+  Object.keys(sampleRows).forEach(sid=>{
+    const s = sampleRows[sid];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="sticky-col col-num">${sid}</td>
+      <td class="sticky-col col-id"><input type="text" class="tbl-input" data-role="clientId" placeholder="Client's own ID" value="${s.clientId}"></td>
+      <td><input type="text" class="tbl-input" data-role="depth" placeholder="m" value="${s.depth}"></td>
+      <td><input type="date" class="tbl-input" data-role="dateSampled" value="${s.dateSampled}"></td>
+      <td>
+        <select class="tbl-select" data-role="description">${optionsHtml(DESCRIPTION_OPTIONS, s.description)}</select>
+        <input type="text" class="tbl-other" data-role="descOther" placeholder="Specify…" value="${s.descOther}" style="display:${s.description==='__other__'?'block':'none'};">
+      </td>
+      <td>
+        <select class="tbl-select" data-role="proposedUse">${optionsHtml(PROPOSED_USE_OPTIONS, s.proposedUse)}</select>
+        <input type="text" class="tbl-other" data-role="useOther" placeholder="Specify…" value="${s.useOther}" style="display:${s.proposedUse==='__other__'?'block':'none'};">
+      </td>
+      <td><input type="text" class="tbl-input" data-role="density" value="${s.density}"></td>
+      ${tmIds.map(tid=>`<td class="test-col"><input type="checkbox" data-tm="${tid}" ${s.checks.has(tid)?'checked':''}></td>`).join('')}
+      <td><button type="button" class="remove-btn" title="Remove sample">✕</button></td>
+    `;
+    body.appendChild(tr);
+
+    tr.querySelector('[data-role="clientId"]').addEventListener('input', e=> s.clientId = e.target.value);
+    tr.querySelector('[data-role="depth"]').addEventListener('input', e=> s.depth = e.target.value);
+    tr.querySelector('[data-role="dateSampled"]').addEventListener('input', e=> s.dateSampled = e.target.value);
+    tr.querySelector('[data-role="density"]').addEventListener('input', e=> s.density = e.target.value);
+
+    const descSel = tr.querySelector('[data-role="description"]');
+    const descOther = tr.querySelector('[data-role="descOther"]');
+    descSel.addEventListener('change', ()=>{
+      s.description = descSel.value;
+      descOther.style.display = descSel.value === '__other__' ? 'block' : 'none';
+      if(descSel.value === '__other__') descOther.focus();
+      updateCoreNotice();
+    });
+    descOther.addEventListener('input', e=>{ s.descOther = e.target.value; updateCoreNotice(); });
+
+    const useSel = tr.querySelector('[data-role="proposedUse"]');
+    const useOther = tr.querySelector('[data-role="useOther"]');
+    useSel.addEventListener('change', ()=>{
+      s.proposedUse = useSel.value;
+      useOther.style.display = useSel.value === '__other__' ? 'block' : 'none';
+      if(useSel.value === '__other__') useOther.focus();
+    });
+    useOther.addEventListener('input', e=> s.useOther = e.target.value);
+
+    tr.querySelectorAll('input[type=checkbox][data-tm]').forEach(cb=>{
+      cb.addEventListener('change', ()=>{
+        const tid = cb.dataset.tm;
+        if(cb.checked) s.checks.add(tid); else s.checks.delete(tid);
+        updateTotals();
+      });
+    });
+    tr.querySelector('.remove-btn').addEventListener('click', ()=> removeSample(sid));
+  });
+
+  if(Object.keys(sampleRows).length === 0){
+    const tr = document.createElement('tr');
+    const colspan = 7 + tmIds.length + 1;
+    tr.innerHTML = `<td colspan="${colspan}" class="empty-note">No samples yet — click "+ Add sample" below.</td>`;
+    body.appendChild(tr);
+  }
+
+  totals.innerHTML = `<td class="sticky-col col-num" colspan="2" style="text-align:right;">Totals</td><td colspan="5"></td>` +
+    tmIds.map(tid=>`<td data-total="${tid}">0</td>`).join('') + `<td></td>`;
+  updateTotals();
+  updateCoreNotice();
+}
+
+function copyFirstToAll(fields){
+  const ids = Object.keys(sampleRows);
+  if(ids.length < 2) return;
+  const first = sampleRows[ids[0]];
+  ids.slice(1).forEach(id=>{
+    fields.forEach(f=> sampleRows[id][f] = first[f]);
+  });
+  renderSampleTable();
+}
+
+function updateCoreNotice(){
+  const notice = document.getElementById('coreNotice');
+  if(!notice) return;
+  const hasCore = Object.values(sampleRows).some(s => descriptionLabel(s).toLowerCase().includes('core'));
+  notice.style.display = hasCore ? 'block' : 'none';
+}
+
+/* ============ REVIEW SCREEN ============ */
+function computeWarnings(){
+  const warnings = [];
+  const idCounts = {};
+  Object.values(sampleRows).forEach(s=>{
+    const id = s.clientId.trim();
+    if(id) idCounts[id] = (idCounts[id]||0) + 1;
+  });
+  Object.entries(idCounts).forEach(([id,count])=>{ if(count>1) warnings.push(`Client Sample ID "${id}" is used on ${count} samples — check this is intentional.`); });
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dsGlobal = document.getElementById('dateSampled').value;
+  if(dsGlobal && new Date(dsGlobal) > today) warnings.push('The Date Sampled on Step 1 is in the future.');
+  Object.entries(sampleRows).forEach(([sid,s])=>{
+    if(s.dateSampled && new Date(s.dateSampled) > today) warnings.push(`Sample ${sid}: Date Sampled is in the future.`);
+  });
+  return warnings;
+}
+
+function renderReview(){
+  const warnBox = document.getElementById('reviewWarnings');
+  const warnings = computeWarnings();
+  warnBox.innerHTML = warnings.length
+    ? `<div class="core-notice"><strong>Worth double-checking</strong><p>${warnings.map(w=>'• '+w).join('<br>')}</p></div>`
+    : '';
+
+  const fullAddress = [document.getElementById('streetAddress').value, suburbInput.value, stateSelect.value, postcodeInput.value].filter(Boolean).join(', ');
+  const emailList = Object.values(reportEmails).filter(v=>v && v.trim()).join(', ');
+  const quoteText = quoteProvidedEl.value === 'Yes' ? ('Yes — Quote #QU-' + document.getElementById('quoteNumber').value) : (quoteProvidedEl.value || '—');
+
+  const kvBody = [
+    ['Client (invoiced)', clientInvoiceEl.value, 'Project name', document.getElementById('project').value],
+    ['Client (on report)', clientReportEl.value, 'Project location', document.getElementById('location').value],
+    ['Client address', fullAddress, 'TRN / Ref #', document.getElementById('trnRef').value || '—'],
+    ['Contact number', document.getElementById('contactNumber').value || '—', 'PO number', document.getElementById('poNumber').value || '—'],
+    ['Submitted by', document.getElementById('submittedBy').value, 'Submitter email', document.getElementById('submitterEmail').value],
+    ['Sampled by', document.getElementById('sampledBy').value || '—', 'Date sampled', document.getElementById('dateSampled').value || '—'],
+    ['Testing urgency', document.getElementById('urgency').value || '—', 'NWL quote provided', quoteText],
+    ['NWL contact person', document.getElementById('nwlContact').value || '—', 'Email reports to', emailList || '—'],
+  ];
+  document.getElementById('reviewClientProject').innerHTML = kvBody.map(([l1,v1,l2,v2])=>
+    `<tr><td class="rkv-label">${l1}</td><td>${v1||'—'}</td><td class="rkv-label">${l2}</td><td>${v2||'—'}</td></tr>`
+  ).join('');
+
+  renderReviewSampleTable();
+
+  document.getElementById('reviewRemarks').textContent = document.getElementById('remarks').value || '—';
+}
+
+function renderReviewSampleTable(){
+  const tmIds = Object.keys(tmRows);
+  const head = document.getElementById('reviewSampleHead');
+  head.innerHTML = `
+    <th class="sticky-col col-num">#</th>
+    <th class="sticky-col col-id">Client Sample ID</th>
+    <th>Depth (m)</th>
+    <th>Date Sampled</th>
+    <th>Description</th>
+    <th>Proposed Use</th>
+    <th>Comments / Density / OMC / Surcharge</th>
+    ${tmIds.map(tid=>`<th class="test-col" title="${tmLabel(tid).replace(/"/g,'&quot;')}"><span class="tcl">${tmShortLabel(tid).replace(/</g,'&lt;')}</span></th>`).join('')}
+  `;
+  const body = document.getElementById('reviewSampleRows');
+  const sids = Object.keys(sampleRows);
+  body.innerHTML = sids.length
+    ? sids.map(sid=>{
+        const s = sampleRows[sid];
+        return `<tr>
+          <td class="sticky-col col-num">${sid}</td>
+          <td class="sticky-col col-id">${s.clientId || '—'}</td>
+          <td>${s.depth || '—'}</td>
+          <td>${s.dateSampled || '—'}</td>
+          <td>${descriptionLabel(s)}</td>
+          <td>${useLabel(s)}</td>
+          <td>${s.density || '—'}</td>
+          ${tmIds.map(tid=>`<td class="test-col">${s.checks.has(tid) ? '✓' : ''}</td>`).join('')}
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="${7+tmIds.length}" class="empty-note">No samples yet.</td></tr>`;
+
+  const totals = document.getElementById('reviewSampleTotals');
+  totals.innerHTML = `<td class="sticky-col col-num" colspan="2" style="text-align:right;">Totals</td><td colspan="5"></td>` +
+    tmIds.map(tid=>{
+      const count = Object.values(sampleRows).filter(s=>s.checks.has(tid)).length;
+      return `<td>${count}</td>`;
+    }).join('');
+}
+
+/* ============ RAIL COMPLETION INDICATORS ============ */
+function updateRailIndicators(){
+  const complete = {
+    1: !!(clientInvoiceEl.value.trim() && clientReportEl.value.trim() && document.getElementById('streetAddress').value.trim()
+        && suburbInput.value.trim() && stateSelect.value && postcodeInput.value.trim()
+        && document.getElementById('project').value.trim() && document.getElementById('location').value.trim()
+        && document.getElementById('submittedBy').value.trim() && document.getElementById('submitterEmail').value.trim()
+        && Object.values(reportEmails).some(v=>v && v.trim())),
+    2: Object.values(tmRows).some(t=>t.value && t.value.trim()),
+    3: Object.values(sampleRows).some(s=>s.clientId && s.clientId.trim()),
+    6: !!(document.getElementById('declAccept').checked && document.getElementById('declHazMat').checked)
+  };
+  Object.keys(complete).forEach(n=>{
+    const el = document.getElementById('railCheck'+n);
+    if(el) el.classList.toggle('complete', complete[n]);
+  });
+}
+['input','change'].forEach(evt => document.addEventListener(evt, ()=>{
+  clearTimeout(window.__railTimer);
+  window.__railTimer = setTimeout(updateRailIndicators, 150);
+}));
+
+function updateTotals(){
+  const tmIds = Object.keys(tmRows);
+  tmIds.forEach(tid=>{
+    const count = Object.values(sampleRows).filter(s=> s.checks.has(tid)).length;
+    const cell = document.querySelector(`#sampleTotalsRow [data-total="${tid}"]`);
+    if(cell) cell.textContent = count;
+  });
+}
+
+function descriptionLabel(s){ return s.description === '__other__' ? (s.descOther || '(unspecified)') : (s.description || '—'); }
+function useLabel(s){ return s.proposedUse === '__other__' ? (s.useOther || '(unspecified)') : (s.proposedUse || '—'); }
+
+document.getElementById('addSampleBtn').addEventListener('click', buildSampleRow);
+document.getElementById('duplicateSampleBtn').addEventListener('click', ()=>{
+  const ids = Object.keys(sampleRows);
+  if(ids.length === 0){ buildSampleRow(); return; }
+  const lastId = ids[ids.length - 1];
+  const src = sampleRows[lastId];
+  sampleCount++;
+  const newId = sampleCount;
+  sampleRows[newId] = {
+    clientId: '', // left blank — must be unique per sample
+    depth: src.depth, dateSampled: src.dateSampled,
+    description: src.description, descOther: src.descOther,
+    proposedUse: src.proposedUse, useOther: src.useOther,
+    density: src.density, checks: new Set(src.checks)
+  };
+  renderSampleTable();
+});
+
+/* ============ SEED ============ */
+buildEmailRow(true);
+buildTmRow();
+buildSampleRow();
+showStep(1);
+
+/* ============ DRAFT AUTOSAVE (browser-local only, nothing sent anywhere) ============ */
+const DRAFT_KEY = 'nwl_tr_draft_v1';
+
+function serializeForm(){
+  const fieldIds = ['clientInvoice','clientReport','streetAddress','suburb','state','postcode','project','location',
+    'contactNumber','poNumber','trnRef','quoteProvided','quoteNumber','nwlContact','submittedBy','submitterEmail',
+    'sampledBy','dateSampled','urgency','remarks'];
+  const fields = {};
+  fieldIds.forEach(id=>{ const el = document.getElementById(id); if(el) fields[id] = el.value; });
+  return {
+    savedAt: Date.now(),
+    fields,
+    sameAsInvoice: sameChk.checked,
+    sameAsSubmitter: sameAsSubmitterChk.checked,
+    reportEmails: Object.values(reportEmails),
+    tmRows: Object.fromEntries(Object.entries(tmRows).map(([k,v])=>[k, {value:v.value, matchedCombo: v.matched ? v.matched.combo : null}])),
+    sampleRows: Object.fromEntries(Object.entries(sampleRows).map(([k,v])=>[k, {...v, checks:[...v.checks]}]))
+  };
+}
+
+function saveDraft(){
+  try{
+    const data = serializeForm();
+    const hasContent = data.fields.clientInvoice || data.fields.project
+      || Object.values(data.tmRows).some(t=>t.value)
+      || Object.values(data.sampleRows).some(s=>s.clientId);
+    if(hasContent) localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+  }catch(e){ /* storage unavailable — autosave is a convenience, fail silently */ }
+}
+
+let draftSaveTimer;
+['input','change'].forEach(evt => document.addEventListener(evt, ()=>{
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(saveDraft, 800);
+}));
+
+function clearDraft(){ try{ localStorage.removeItem(DRAFT_KEY); }catch(e){} }
+
+function restoreDraft(draft){
+  const f = draft.fields || {};
+  Object.keys(f).forEach(id=>{ const el = document.getElementById(id); if(el) el.value = f[id]; });
+
+  sameChk.checked = !!draft.sameAsInvoice;
+  syncReportName();
+  quoteNumberField.classList.toggle('hidden', quoteProvidedEl.value !== 'Yes');
+
+  document.getElementById('reportEmailList').innerHTML = '';
+  emailCount = 0;
+  Object.keys(reportEmails).forEach(k=> delete reportEmails[k]);
+  const savedEmails = (draft.reportEmails && draft.reportEmails.length) ? draft.reportEmails : [''];
+  savedEmails.forEach((val, i)=>{
+    buildEmailRow(i === 0);
+    const id = emailCount;
+    const inp = document.querySelector(`#email-${id} input`);
+    if(inp){ inp.value = val || ''; reportEmails[id] = val || ''; }
+  });
+  sameAsSubmitterChk.checked = !!draft.sameAsSubmitter;
+  syncPrimaryReportEmail();
+
+  document.getElementById('tmList').innerHTML = '';
+  tmCount = 0;
+  Object.keys(tmRows).forEach(k=> delete tmRows[k]);
+  Object.values(draft.tmRows || {}).forEach(t=>{
+    buildTmRow();
+    const id = tmCount;
+    const input = document.querySelector(`#tm-${id} [data-role="search"]`);
+    if(input) input.value = t.value || '';
+    tmRows[id].value = t.value || '';
+    tmRows[id].matched = t.matchedCombo ? (TEST_DATA.find(d=>d.combo === t.matchedCombo) || null) : null;
+  });
+  updateLegend();
+
+  document.getElementById('sampleTableBody').innerHTML = '';
+  sampleCount = 0;
+  Object.keys(sampleRows).forEach(k=> delete sampleRows[k]);
+  Object.values(draft.sampleRows || {}).forEach(s=>{
+    sampleCount++;
+    const id = sampleCount;
+    sampleRows[id] = {
+      clientId: s.clientId||'', depth: s.depth||'', dateSampled: s.dateSampled||'',
+      description: s.description||'', descOther: s.descOther||'', proposedUse: s.proposedUse||'',
+      useOther: s.useOther||'', density: s.density||'', checks: new Set((s.checks||[]).map(String))
+    };
+  });
+  renderSampleTable();
+  updateCoreNotice();
+  updateRailIndicators();
+}
+
+function checkForDraft(){
+  let raw;
+  try{ raw = localStorage.getItem(DRAFT_KEY); }catch(e){ return; }
+  if(!raw) return;
+  let draft;
+  try{ draft = JSON.parse(raw); }catch(e){ return; }
+  if(!draft || !draft.savedAt) return;
+  const when = new Date(draft.savedAt).toLocaleString();
+  document.getElementById('draftBannerText').textContent = `We found a saved draft from ${when}. Restore it?`;
+  document.getElementById('draftBanner').style.display = 'flex';
+  document.getElementById('restoreDraftBtn').onclick = ()=>{
+    restoreDraft(draft);
+    document.getElementById('draftBanner').style.display = 'none';
+  };
+  document.getElementById('discardDraftBtn').onclick = ()=>{
+    clearDraft();
+    document.getElementById('draftBanner').style.display = 'none';
+  };
+}
+checkForDraft();
+
+/* ============ SAVED TEMPLATES (client details + test methods, for repeat clients) ============ */
+const TEMPLATES_KEY = 'nwl_tr_templates_v1';
+
+function captureClientAndTests(){
+  // Deliberately excludes project, location, trnRef, dateSampled, remarks — those change per request
+  const fieldIds = ['clientInvoice','clientReport','streetAddress','suburb','state','postcode',
+    'contactNumber','poNumber','quoteProvided','quoteNumber','nwlContact','submittedBy','submitterEmail',
+    'sampledBy','urgency'];
+  const fields = {};
+  fieldIds.forEach(id=>{ const el = document.getElementById(id); if(el) fields[id] = el.value; });
+  return {
+    fields,
+    sameAsInvoice: sameChk.checked,
+    sameAsSubmitter: sameAsSubmitterChk.checked,
+    reportEmails: Object.values(reportEmails),
+    tmRows: Object.fromEntries(Object.entries(tmRows).map(([k,v])=>[k, {value:v.value, matchedCombo: v.matched ? v.matched.combo : null}]))
+  };
+}
+
+function applyClientAndTests(state){
+  const f = state.fields || {};
+  Object.keys(f).forEach(id=>{ const el = document.getElementById(id); if(el) el.value = f[id]; });
+  sameChk.checked = !!state.sameAsInvoice;
+  syncReportName();
+  quoteNumberField.classList.toggle('hidden', quoteProvidedEl.value !== 'Yes');
+
+  document.getElementById('reportEmailList').innerHTML = '';
+  emailCount = 0;
+  Object.keys(reportEmails).forEach(k=> delete reportEmails[k]);
+  const savedEmails = (state.reportEmails && state.reportEmails.length) ? state.reportEmails : [''];
+  savedEmails.forEach((val, i)=>{
+    buildEmailRow(i === 0);
+    const id = emailCount;
+    const inp = document.querySelector(`#email-${id} input`);
+    if(inp){ inp.value = val || ''; reportEmails[id] = val || ''; }
+  });
+  sameAsSubmitterChk.checked = !!state.sameAsSubmitter;
+  syncPrimaryReportEmail();
+
+  document.getElementById('tmList').innerHTML = '';
+  tmCount = 0;
+  Object.keys(tmRows).forEach(k=> delete tmRows[k]);
+  Object.values(state.tmRows || {}).forEach(t=>{
+    buildTmRow();
+    const id = tmCount;
+    const input = document.querySelector(`#tm-${id} [data-role="search"]`);
+    if(input) input.value = t.value || '';
+    tmRows[id].value = t.value || '';
+    tmRows[id].matched = t.matchedCombo ? (TEST_DATA.find(d=>d.combo === t.matchedCombo) || null) : null;
+  });
+  updateLegend();
+  refreshSampleColumns();
+  updateRailIndicators();
+}
+
+function getTemplates(){
+  try{ return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); }catch(e){ return []; }
+}
+function saveTemplatesList(list){
+  try{ localStorage.setItem(TEMPLATES_KEY, JSON.stringify(list)); }catch(e){}
+}
+function refreshTemplateSelect(){
+  const sel = document.getElementById('templateSelect');
+  const templates = getTemplates();
+  sel.innerHTML = '<option value="">' + (templates.length ? 'Select a saved template…' : 'No saved templates yet') + '</option>'
+    + templates.map((t,i)=>`<option value="${i}">${t.name}</option>`).join('');
+}
+document.getElementById('saveTemplateBtn').addEventListener('click', ()=>{
+  const name = window.prompt('Name this template (e.g. "ABC Construction — Cement Content"):');
+  if(!name || !name.trim()) return;
+  const templates = getTemplates();
+  templates.push(Object.assign({name: name.trim(), savedAt: Date.now()}, captureClientAndTests()));
+  saveTemplatesList(templates);
+  refreshTemplateSelect();
+});
+document.getElementById('loadTemplateBtn').addEventListener('click', ()=>{
+  const idx = document.getElementById('templateSelect').value;
+  if(idx === '') return;
+  const templates = getTemplates();
+  const t = templates[parseInt(idx,10)];
+  if(t) applyClientAndTests(t);
+});
+document.getElementById('deleteTemplateBtn').addEventListener('click', ()=>{
+  const sel = document.getElementById('templateSelect');
+  const idx = sel.value;
+  if(idx === '') return;
+  const templates = getTemplates();
+  templates.splice(parseInt(idx,10), 1);
+  saveTemplatesList(templates);
+  refreshTemplateSelect();
+});
+refreshTemplateSelect();
+
+/* ============ VALIDATION ============ */
+function collectErrors(){
+  const errs = [];
+  const req = [[1,'streetAddress','Street address'],[1,'suburb','Suburb'],[1,'state','State'],[1,'postcode','Postcode'],
+    [1,'project','Project name'],[1,'location','Project location'],[1,'submittedBy','Submitted by'],[1,'submitterEmail','Your email']];
+  if(!clientInvoiceEl.value.trim()) errs.push({step:1, msg:'Client name to be invoiced is required.'});
+  req.forEach(([step,id,label])=>{ if(!document.getElementById(id).value.trim()) errs.push({step, msg: label + ' is required.'}); });
+  if(!clientReportEl.value.trim()) errs.push({step:1, msg:'Client name to appear on report is required.'});
+  const hasReportEmail = Object.values(reportEmails).some(v=>v && v.trim());
+  if(!hasReportEmail) errs.push({step:1, msg:'At least one "Email reports to" address is required.'});
+  if(quoteProvidedEl.value === 'Yes' && !document.getElementById('quoteNumber').value.trim()) errs.push({step:1, msg:'Quote number is required when a quote has been provided.'});
+
+  if(Object.keys(tmRows).length === 0) errs.push({step:2, msg:'Add at least one test method.'});
+  Object.entries(tmRows).forEach(([id,t])=>{ if(!t.value || !t.value.trim()) errs.push({step:2, msg:`Test method ${id}: enter or select a test.`}); });
+
+  if(Object.keys(sampleRows).length === 0) errs.push({step:3, msg:'Add at least one sample.'});
+  Object.entries(sampleRows).forEach(([id,s])=>{ if(!s.clientId.trim()) errs.push({step:3, msg:`Sample ${id}: enter a Client Sample ID.`}); });
+
+  if(!document.getElementById('declAccept').checked) errs.push({step:6, msg:'You must accept the declaration.'});
+  if(!document.getElementById('declHazMat').checked) errs.push({step:6, msg:'You must declare the samples are free from asbestos and other hazardous substances.'});
+  return errs;
+}
+
+/* ============ PDF (landscape, table layout, logo) ============ */
+function buildPdf(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt', format:'a4', orientation:'landscape'});
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 34;
+  let y = margin;
+
+  try{
+    const logoEl = document.querySelector('.brand img');
+    const logoDataUrl = logoEl.src;
+    const logoW = 120, logoH = logoW/3.0219;
+    doc.addImage(logoDataUrl, 'JPEG', margin, y, logoW, logoH);
+  }catch(e){}
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor(12,39,46);
+  doc.text('Test Request Form', pageW - margin, y+14, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  doc.text('Ref: ' + TR_REFERENCE + '  ·  Submitted ' + new Date().toLocaleString(), pageW - margin, y+28, {align:'right'});
+  doc.setTextColor(20,20,20);
+  y += 50;
+  doc.setDrawColor(22,178,139); doc.setLineWidth(2); doc.line(margin, y, pageW-margin, y); doc.setLineWidth(1); doc.setDrawColor(20,20,20);
+  y += 16;
+
+  const fullAddress = [document.getElementById('streetAddress').value, suburbInput.value, stateSelect.value, postcodeInput.value].filter(Boolean).join(', ');
+  const emailList = Object.values(reportEmails).filter(v=>v && v.trim()).join(', ');
+  const quoteText = quoteProvidedEl.value === 'Yes' ? ('Yes — Quote #QU-' + document.getElementById('quoteNumber').value) : (quoteProvidedEl.value || '—');
+
+  const kvBody = [
+    ['Client (invoiced)', clientInvoiceEl.value, 'Project name', document.getElementById('project').value],
+    ['Client (on report)', clientReportEl.value, 'Project location', document.getElementById('location').value],
+    ['Client address', fullAddress, 'TRN / Ref #', document.getElementById('trnRef').value || '—'],
+    ['Contact number', document.getElementById('contactNumber').value || '—', 'PO number', document.getElementById('poNumber').value || '—'],
+    ['Submitted by', document.getElementById('submittedBy').value, 'Submitter email', document.getElementById('submitterEmail').value],
+    ['Sampled by', document.getElementById('sampledBy').value || '—', 'Date sampled', document.getElementById('dateSampled').value || '—'],
+    ['Testing urgency', document.getElementById('urgency').value || '—', 'NWL quote provided', quoteText],
+    ['NWL contact person', document.getElementById('nwlContact').value || '—', 'Email reports to', emailList],
+  ];
+
+  doc.autoTable({
+    startY: y,
+    margin:{left:margin, right:margin},
+    theme:'plain',
+    styles:{fontSize:8.5, cellPadding:3, textColor:[20,20,20]},
+    columnStyles:{0:{fontStyle:'bold', cellWidth:105},1:{cellWidth:280},2:{fontStyle:'bold', cellWidth:105},3:{cellWidth:'auto'}},
+    body: kvBody
+  });
+  y = doc.lastAutoTable.finalY + 18;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(12,39,46);
+  doc.text('Samples & Testing', margin, y);
+  doc.setTextColor(20,20,20);
+  y += 10;
+
+  const tmIds = Object.keys(tmRows);
+  const testHeaders = tmIds.map(tid => tmShortLabel(tid));
+  const head = [['#','Client ID','Depth (m)','Date','Description','Proposed Use','Comments / Density / OMC / Surcharge', ...testHeaders]];
+  const sBody = Object.keys(sampleRows).map(sid=>{
+    const s = sampleRows[sid];
+    const row = [sid, s.clientId || '—', s.depth || '—', s.dateSampled || '—', descriptionLabel(s), useLabel(s), s.density || '—'];
+    tmIds.forEach(tid=> row.push(s.checks.has(tid) ? 'X' : ''));
+    return row;
+  });
+  const totalsRow = ['','','','','','Totals','', ...tmIds.map(tid=> String(Object.values(sampleRows).filter(s=>s.checks.has(tid)).length))];
+
+  const testColStyles = {};
+  tmIds.forEach((tid,i)=>{ testColStyles[7+i] = {halign:'center'}; });
+
+  doc.autoTable({
+    startY: y,
+    margin:{left:margin, right:margin},
+    styles:{fontSize:6.5, cellPadding:3, textColor:[20,20,20], lineColor:[216,227,224], lineWidth:0.5, overflow:'linebreak'},
+    headStyles:{fillColor:[12,39,46], textColor:255, fontSize:6.5, halign:'center'},
+    footStyles:{fillColor:[244,248,247], textColor:[12,39,46], fontStyle:'bold', fontSize:7},
+    columnStyles: Object.assign({0:{cellWidth:16,halign:'center'},1:{cellWidth:55},2:{cellWidth:30,halign:'center'},3:{cellWidth:38,halign:'center'},4:{cellWidth:52},5:{cellWidth:62},6:{cellWidth:75}}, testColStyles),
+    head, body: sBody, foot: [totalsRow]
+  });
+  y = doc.lastAutoTable.finalY + 18;
+
+  if(y > pageH - 100){ doc.addPage('a4','landscape'); y = margin; }
+
+  function ensureRoom(h){ if(y + h > pageH - margin){ doc.addPage('a4','landscape'); y = margin; } }
+  function h1(text){ ensureRoom(22); doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor(12,39,46); doc.text(text, margin, y); doc.setTextColor(20,20,20); y+=18; }
+  function para(text){
+    ensureRoom(12);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+    const lines = doc.splitTextToSize(text, pageW - margin*2);
+    doc.text(lines, margin, y);
+    y += 12*lines.length;
+  }
+  function kv(label, value){
+    ensureRoom(12);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.text(label+':', margin, y);
+    doc.setFont('helvetica','normal');
+    doc.text(String(value||'—'), margin+130, y);
+    y += 12;
+  }
+
+  h1('Remarks and/or Other Details');
+  para(document.getElementById('remarks').value || '—');
+  y += 8;
+
+  h1('Declaration');
+  para('By submitting this Test Request Form, the Client confirms that the information provided is complete and accurate and authorises New World Laboratories to undertake the requested services. The Client acknowledges that testing will be performed in accordance with NWL\'s Client Service & Commercial Terms, and that additional charges may apply where work varies from the original request or where additional services are required.');
+  y += 4;
+  para('The Client declares that the submitted sample(s) are free from asbestos and any other harmful or hazardous substances, to the best of their knowledge.');
+  y += 6;
+  kv('Accepted by', document.getElementById('submittedBy').value + ' — ' + new Date().toLocaleDateString());
+
+  const clientSlug = (clientReportEl.value || 'TestRequest').replace(/[^a-z0-9]+/gi,'_');
+  doc.save(`${TR_REFERENCE}_${clientSlug}.pdf`);
+}
+
+function openEmailDraft(){
+  const client = clientReportEl.value;
+  const project = document.getElementById('project').value;
+  const submitter = document.getElementById('submitterEmail').value;
+  const otherEmails = Object.values(reportEmails).filter(v=>v && v.trim());
+  const ccList = [submitter, ...otherEmails].filter(Boolean).join(',');
+  const subject = encodeURIComponent(`Test Request ${TR_REFERENCE} — ${client} — ${project}`);
+  const body = encodeURIComponent(
+`Hi NWL team,
+
+Please find our Test Request attached (PDF).
+
+Reference: ${TR_REFERENCE}
+Client: ${client}
+Project: ${project}
+Submitted by: ${document.getElementById('submittedBy').value}
+
+Thanks,
+${document.getElementById('submittedBy').value}`);
+  const mailto = `mailto:${LAB_EMAIL}?cc=${encodeURIComponent(ccList)}&subject=${subject}&body=${body}`;
+  window.location.href = mailto;
+}
+
+document.getElementById('submitBtn').addEventListener('click', ()=>{
+  const errs = collectErrors();
+  const errorBox = document.getElementById('errorBox');
+  const errorList = document.getElementById('errorList');
+  if(errs.length){
+    const firstStep = Math.min(...errs.map(e=>e.step));
+    if(currentStep !== firstStep) showStep(firstStep);
+    errorList.innerHTML = errs.map(e=>`<li>${e.msg}</li>`).join('');
+    errorBox.classList.add('show');
+    errorBox.scrollIntoView?.({behavior:'smooth', block:'center'});
+    return;
+  }
+  errorBox.classList.remove('show');
+  buildPdf();
+  clearDraft();
+  document.getElementById('confirm-overlay').classList.add('show');
+});
+document.getElementById('openEmailBtn').addEventListener('click', openEmailDraft);
+document.getElementById('closeConfirmBtn').addEventListener('click', ()=>{ document.getElementById('confirm-overlay').classList.remove('show'); });
+</script>
+</body>
+</html>

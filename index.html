@@ -81,11 +81,14 @@ input[type=text],input[type=email],input[type=tel],input[type=date],textarea,sel
   font-family:var(--sans);font-size:14px;padding:9px 10px;border:1px solid #b9c4c1;background:#fff;color:var(--ink);width:100%;
 }
 input:disabled{background:var(--paper);color:var(--ink-soft);}
+input.needs-attention, select.needs-attention{border-color:var(--warn)!important;background:var(--warn-tint)!important;}
 input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
 textarea{resize:vertical;min-height:70px;font-family:var(--sans);}
 select{appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%230c272e"/></svg>');background-repeat:no-repeat;background-position:right 10px center;padding-right:26px;}
 
 .suggestions{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line-strong);z-index:30;max-height:230px;overflow-y:auto;display:none;box-shadow:0 6px 14px rgba(12,39,46,.15);}
+#descFloatingBox{position:fixed;background:#fff;border:1px solid var(--line-strong);z-index:200;max-height:230px;overflow-y:auto;display:none;box-shadow:0 6px 14px rgba(12,39,46,.15);}
+#descFloatingBox.show{display:block;}
 .suggestions.show{display:block;}
 .suggestion-item{padding:9px 11px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--paper);}
 .suggestion-item:last-child{border-bottom:none;}
@@ -138,8 +141,11 @@ table.sample-table thead .sticky-col{background:var(--ink);z-index:6;}
 table.sample-table .col-num{left:0;width:34px;min-width:34px;text-align:center;}
 table.sample-table .col-id{left:34px;min-width:140px;box-shadow:2px 0 4px rgba(12,39,46,.08);}
 .tbl-input{padding:5px 6px;font-size:12.5px;min-width:90px;}
-.tbl-select{padding:5px 6px;font-size:12.5px;min-width:110px;background-position:right 6px center;padding-right:20px;}
-.tbl-other{margin-top:4px;padding:5px 6px;font-size:12px;min-width:100px;}
+table.sample-table td:nth-child(3) input, table.sample-table th:nth-child(3){min-width:95px;width:100px;}
+table.sample-table td:nth-child(4) input, table.sample-table th:nth-child(4){min-width:120px;width:130px;}
+table.sample-table td:nth-child(5) input, table.sample-table th:nth-child(5){min-width:170px;width:100%;}
+.tbl-select{padding:5px 6px;font-size:12.5px;min-width:170px;width:100%;background-position:right 6px center;padding-right:20px;}
+.tbl-other{margin-top:4px;padding:5px 6px;font-size:12px;min-width:170px;width:100%;}
 tfoot td{background:var(--paper);font-weight:700;font-family:var(--mono);text-align:center;}
 tfoot td.sticky-col{background:var(--paper);}
 .empty-note{color:var(--ink-soft);font-size:13px;font-style:italic;padding:10px 0;}
@@ -238,7 +244,7 @@ table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
   </div>
 </div>
 
-<form id="trForm" autocomplete="on" onsubmit="event.preventDefault(); return false;">
+<form id="trForm" autocomplete="on">
 <div class="wrap">
 
 
@@ -253,12 +259,13 @@ table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
           <select id="templateSelect" style="flex:1;min-width:200px;"></select>
           <button type="button" class="btn btn-sm" id="loadTemplateBtn">Load</button>
           <button type="button" class="btn btn-sm btn-ghost" id="deleteTemplateBtn">Delete</button>
-          <button type="button" class="btn btn-sm btn-accent" id="saveTemplateBtn">Save current as template</button>
+          <button type="button" class="btn btn-sm" id="updateTemplateBtn">Update selected</button>
+          <button type="button" class="btn btn-sm btn-accent" id="saveTemplateBtn">Save as new template</button>
         </div>
         <p style="font-size:11px;color:var(--ink-soft);margin:8px 0 0;">Saves client details and test methods only — not Project Name, Location, or Samples, since those change each time. Saved in this browser only.</p>
       </div>
       <div class="grid">
-        <div class="field"><label>Client name to be invoiced <span class="req">*</span></label><input type="text" id="clientInvoice" name="clientInvoice" autocomplete="organization" required></div>
+        <div class="field"><label>Client name to be invoiced <span class="req">*</span></label><input type="text" id="clientInvoice" name="clientInvoice" required></div>
         <div class="field">
           <div class="field-label-row">
             <label>Client name to appear on report <span class="req">*</span></label>
@@ -269,26 +276,24 @@ table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
 
         <div class="field full" style="position:relative;">
           <label>Client street address <span class="req">*</span></label>
-          <input type="text" id="streetAddress" name="streetAddress" autocomplete="address-line1" placeholder="e.g. 12 Example Street" required>
+          <input type="text" id="streetAddress" name="streetAddress" placeholder="e.g. 12 Example Street" required>
         </div>
         <div class="field" style="position:relative;">
           <label>Suburb <span class="req">*</span></label>
-          <input type="text" id="suburb" name="suburb" autocomplete="address-level2" placeholder="Start typing…" required>
-          <div class="suggestions" id="suburbSuggestions"></div>
-          <div class="powered-by">Suburb lookup via OpenStreetMap · Australia only</div>
+          <input type="text" id="suburb" name="suburb" placeholder="e.g. Osborne Park" required>
         </div>
         <div class="field"><label>State <span class="req">*</span></label>
-          <select name="state" id="state" autocomplete="address-level1" required>
+          <select name="state" id="state" required>
             <option value="">Select…</option>
             <option>WA</option><option>NSW</option><option>VIC</option><option>QLD</option>
             <option>SA</option><option>TAS</option><option>ACT</option><option>NT</option>
           </select>
         </div>
-        <div class="field"><label>Postcode <span class="req">*</span></label><input type="text" id="postcode" name="postcode" autocomplete="postal-code" inputmode="numeric" maxlength="4" required></div>
+        <div class="field"><label>Postcode <span class="req">*</span></label><input type="text" id="postcode" name="postcode" inputmode="numeric" maxlength="4" required></div>
 
         <div class="field"><label>Project Name <span class="req">*</span></label><input type="text" id="project" name="project" required></div>
         <div class="field"><label>Project Location <span class="req">*</span></label><input type="text" id="location" name="location" required></div>
-        <div class="field"><label>Client contact number</label><input type="tel" id="contactNumber" name="contactNumber" autocomplete="tel"></div>
+        <div class="field"><label>Client contact number</label><input type="tel" id="contactNumber" name="contactNumber"></div>
         <div class="field"><label>PO number <span class="hint" style="font-weight:400;text-transform:none;">(required before testing commences)</span></label><input type="text" id="poNumber" name="poNumber"></div>
         <div class="field"><label>TRN / Ref #</label><input type="text" id="trnRef" name="trnRef" placeholder="Your own tracking or reference number"></div>
 
@@ -313,12 +318,11 @@ table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
           </select>
         </div>
 
-        <div class="field"><label>Submitted by <span class="req">*</span></label><input type="text" id="submittedBy" name="submittedBy" autocomplete="name" required></div>
-        <div class="field"><label>Your email <span class="req">*</span> <span class="hint" style="font-weight:400;text-transform:none;">(we'll cc you)</span></label><input type="email" id="submitterEmail" name="submitterEmail" autocomplete="email" required></div>
+        <div class="field"><label>Submitted by <span class="req">*</span></label><input type="text" id="submittedBy" name="submittedBy" required></div>
+        <div class="field"><label>Your email <span class="req">*</span> <span class="hint" style="font-weight:400;text-transform:none;">(we'll cc you)</span></label><input type="email" id="submitterEmail" name="submitterEmail" required></div>
         <div class="field"><label>Sampled by</label>
           <select name="sampledBy" id="sampledBy"><option value="">Select…</option><option>Client</option><option>NWL Field Technician</option><option>Third-party consultant</option><option>Other</option></select>
         </div>
-        <div class="field"><label>Date sampled</label><input type="date" id="dateSampled" name="dateSampled"></div>
         <div class="field"><label>Testing urgency</label>
           <select name="urgency" id="urgency"><option value="">Select…</option><option>Standard</option><option>Priority (24–48hr)</option><option>Urgent (same day)</option></select>
         </div>
@@ -355,6 +359,18 @@ table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
     <div class="panel-head"><div class="panel-num">3</div><h2>Samples</h2></div>
     <div class="panel-body">
       <p style="font-size:12.5px;color:var(--ink-soft);margin-top:0;">Tick which test methods (added in Step 2) apply to each sample. Column headers show the test code — scroll right to see all of them.</p>
+      <div id="templateSection2" style="margin-bottom:16px;padding:12px 14px;background:var(--paper);border:1px solid var(--line);">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);margin-bottom:8px;">Regular client? Save time next visit</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="templateSelect2" style="flex:1;min-width:200px;"></select>
+          <button type="button" class="btn btn-sm" id="loadTemplateBtn2">Load</button>
+          <button type="button" class="btn btn-sm btn-ghost" id="deleteTemplateBtn2">Delete</button>
+          <button type="button" class="btn btn-sm" id="updateTemplateBtn2">Update selected</button>
+          <button type="button" class="btn btn-sm btn-accent" id="saveTemplateBtn2">Save as new template</button>
+        </div>
+        <p style="font-size:11px;color:var(--ink-soft);margin:8px 0 0;">Also saves any custom Description you've typed for this sample (e.g. "ECO Red") — it'll show up in the description list next time you load this template.</p>
+      </div>
+      <div class="core-notice" id="dupeIdNotice" style="display:none;"></div>
       <div class="table-scroll">
         <table class="sample-table" id="sampleTable">
           <thead><tr id="sampleHeadRow"></tr></thead>
@@ -460,22 +476,36 @@ table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
 
 <div id="confirm-overlay">
   <div class="confirm-card">
-    <h3>Your PDF has been downloaded</h3>
-    <p style="background:#fbeceA;border:1px solid var(--danger);padding:10px 12px;color:var(--ink);"><strong>The PDF was NOT automatically attached to the email.</strong> You need to attach it yourself — see step 2 below.</p>
-    <p>To finish sending your request:</p>
+    <h3 id="confirmTitle">Your PDF has been downloaded</h3>
+    <p style="background:#fbeceA;border:1px solid var(--danger);padding:10px 12px;color:var(--ink);"><strong>The PDF was NOT automatically attached to the email.</strong> You need to attach it yourself — see below.</p>
+
+    <div class="est-section-title" style="margin-top:18px;">Option 1 — Need to submit another request?</div>
+    <div id="submitMoreSection">
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;">Start another one now — your client details and test methods carry over, only Samples reset (and Project/Location too, unless ticked below). One combined email goes out at the end with every PDF listed.</p>
+      <div class="decl-check" style="margin-bottom:12px;">
+        <input type="checkbox" id="keepProjectLocation">
+        <label for="keepProjectLocation">Next request is for the <strong>same project/location</strong></label>
+      </div>
+      <button type="button" class="btn btn-accent" id="startAnotherBtn" style="width:100%;">+ Start another request</button>
+    </div>
+
+    <div class="est-section-title" style="margin-top:20px;">Option 2 — Ready to send this?</div>
+    <p id="finishIntro">To finish sending your request:</p>
     <ol>
-      <li><strong>Check the downloaded PDF is correct.</strong></li>
+      <li><strong>Check the downloaded PDF(s) are correct.</strong></li>
       <li>An email draft is about to open, addressed to New World Laboratories (with a copy to you and any other recipients you added).</li>
-      <li><strong>Attach the PDF that just downloaded</strong> to your device — it will not attach itself.</li>
+      <li><strong>Attach every PDF that's downloaded</strong> to your device — none of them attach themselves.</li>
       <li>Hit send in your email app.</li>
     </ol>
     <div class="confirm-actions">
-      <button type="button" class="btn btn-accent" id="openEmailBtn">Open email draft →</button>
+      <button type="button" class="btn btn-accent" id="openEmailBtn">Finish &amp; open email draft →</button>
       <button type="button" class="btn btn-ghost" id="closeConfirmBtn">Close</button>
     </div>
-    <p style="font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line);margin:18px 0 0;padding-top:12px;"><strong>PDF report incorrect?</strong> Click Close below, then click Back to return to Samples and make the required changes.</p>
+    <p style="font-size:12px;color:var(--ink-soft);border-top:1px solid var(--line);margin:18px 0 0;padding-top:12px;"><strong>PDF report incorrect?</strong> Click Close above, then click Back to return to Samples and make the required changes.</p>
   </div>
 </div>
+
+<div id="descFloatingBox" class="suggestions"></div>
 
 <div id="warn-overlay">
   <div class="warn-card">
@@ -487,15 +517,18 @@ table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
 
 <script>
 const TEST_DATA = [{"standard":"AS","method":"1012.1 - Sampling","combo":"AS 1012.1 - Sampling"},{"standard":"AS","method":"1012.12.1 - Mass per Unit Volume","combo":"AS 1012.12.1 - Mass per Unit Volume"},{"standard":"AS","method":"1012.14 \u2013 Testing of Cores","combo":"AS 1012.14 \u2013 Testing of Cores"},{"standard":"AS","method":"1012.2 - Laboratory Concrete Mixes","combo":"AS 1012.2 - Laboratory Concrete Mixes"},{"standard":"AS","method":"1012.3.1 - Slump","combo":"AS 1012.3.1 - Slump"},{"standard":"AS","method":"1012.8.1 - Making & Curing Compression Test Specimens","combo":"AS 1012.8.1 - Making & Curing Compression Test Specimens"},{"standard":"AS","method":"1012.9 - Compressive Strength","combo":"AS 1012.9 - Compressive Strength"},{"standard":"AS","method":"1141.11.1 - Particle Size Distribution","combo":"AS 1141.11.1 - Particle Size Distribution"},{"standard":"AS","method":"1141.12 - Material Finer than 75 Micron","combo":"AS 1141.12 - Material Finer than 75 Micron"},{"standard":"AS","method":"1141.14 - Particle Shape by Proportional Caliper","combo":"AS 1141.14 - Particle Shape by Proportional Caliper"},{"standard":"AS","method":"1141.15 - Flakiness Index","combo":"AS 1141.15 - Flakiness Index"},{"standard":"AS","method":"1141.18 \u2013 Crushed Faces","combo":"AS 1141.18 \u2013 Crushed Faces"},{"standard":"AS","method":"1141.20.1 - Average Least Dimension","combo":"AS 1141.20.1 - Average Least Dimension"},{"standard":"AS","method":"1141.20.2 - Average Least Dimension","combo":"AS 1141.20.2 - Average Least Dimension"},{"standard":"AS","method":"1141.21 - Aggregate Crushing Value","combo":"AS 1141.21 - Aggregate Crushing Value"},{"standard":"AS","method":"1141.22 - Wet/Dry Strength Variation","combo":"AS 1141.22 - Wet/Dry Strength Variation"},{"standard":"AS","method":"1141.23 - Los Angeles Value","combo":"AS 1141.23 - Los Angeles Value"},{"standard":"AS","method":"1141.24 \u2013 Sodium Sulphate Soundness","combo":"AS 1141.24 \u2013 Sodium Sulphate Soundness"},{"standard":"AS","method":"1141.27 - Resistance to Wear by Attrition","combo":"AS 1141.27 - Resistance to Wear by Attrition"},{"standard":"AS","method":"1141.29 - Accelerated Soundness Index","combo":"AS 1141.29 - Accelerated Soundness Index"},{"standard":"AS","method":"1141.3.1 - Sampling 3.1","combo":"AS 1141.3.1 - Sampling 3.1"},{"standard":"AS","method":"1141.32 \u2013 Weak Particles","combo":"AS 1141.32 \u2013 Weak Particles"},{"standard":"AS","method":"1141.33 - Clay & Fine Silt","combo":"AS 1141.33 - Clay & Fine Silt"},{"standard":"AS","method":"1141.34 \u2013 Organic Impurities other than sugar","combo":"AS 1141.34 \u2013 Organic Impurities other than sugar"},{"standard":"AS","method":"1141.4 - Bulk Density","combo":"AS 1141.4 - Bulk Density"},{"standard":"AS","method":"1141.42 \u2013 Pendulum Skid Resistance","combo":"AS 1141.42 \u2013 Pendulum Skid Resistance"},{"standard":"AS","method":"1141.5 - Particle Density & Water Absorption - Fine","combo":"AS 1141.5 - Particle Density & Water Absorption - Fine"},{"standard":"AS","method":"1141.50 - Resistance to Stripping","combo":"AS 1141.50 - Resistance to Stripping"},{"standard":"AS","method":"1141.6.1 - Particle Density & Water Absorption - Coarse","combo":"AS 1141.6.1 - Particle Density & Water Absorption - Coarse"},{"standard":"AS","method":"1142.60.1 - Potetial alkai-silica reactivity-accelerated mortar bar method","combo":"AS 1142.60.1 - Potetial alkai-silica reactivity-accelerated mortar bar method"},{"standard":"AS","method":"1289.0 - Definitions and General Requirments","combo":"AS 1289.0 - Definitions and General Requirments"},{"standard":"AS","method":"1289.1.1 - Sample Preparation","combo":"AS 1289.1.1 - Sample Preparation"},{"standard":"AS","method":"1289.1.2.1 - Sampling 1.2.1","combo":"AS 1289.1.2.1 - Sampling 1.2.1"},{"standard":"AS","method":"1289.1.4.1 - Site Selection - Random Numbers","combo":"AS 1289.1.4.1 - Site Selection - Random Numbers"},{"standard":"AS","method":"1289.1.4.2 - Site Selection - Random Stratified Numbers","combo":"AS 1289.1.4.2 - Site Selection - Random Stratified Numbers"},{"standard":"AS","method":"1289.2.1.1 - Moisture Content","combo":"AS 1289.2.1.1 - Moisture Content"},{"standard":"AS","method":"1289.3.1.1 - Liquid Limit - Four Point Casagrande","combo":"AS 1289.3.1.1 - Liquid Limit - Four Point Casagrande"},{"standard":"AS","method":"1289.3.1.2 - Liquid Limit - One Point Casagrande","combo":"AS 1289.3.1.2 - Liquid Limit - One Point Casagrande"},{"standard":"AS","method":"1289.3.2.1 - Plastic Limit","combo":"AS 1289.3.2.1 - Plastic Limit"},{"standard":"AS","method":"1289.3.3.1 - Plasticity Index - Casagrande","combo":"AS 1289.3.3.1 - Plasticity Index - Casagrande"},{"standard":"AS","method":"1289.3.3.2 - Plasticity Index - Cone Penetrometer","combo":"AS 1289.3.3.2 - Plasticity Index - Cone Penetrometer"},{"standard":"AS","method":"1289.3.4.1 - Linear Shrinkage","combo":"AS 1289.3.4.1 - Linear Shrinkage"},{"standard":"AS","method":"1289.3.6.1 - Particle Size Distribution","combo":"AS 1289.3.6.1 - Particle Size Distribution"},{"standard":"AS","method":"1289.3.6.3 \u2013 PSD Fine Particles \u2013 Hydrometer","combo":"AS 1289.3.6.3 \u2013 PSD Fine Particles \u2013 Hydrometer"},{"standard":"AS","method":"1289.3.8.1 - Emerson Class Number","combo":"AS 1289.3.8.1 - Emerson Class Number"},{"standard":"AS","method":"1289.3.8.2 \u2013 Determination of the percent dispersion of a soil","combo":"AS 1289.3.8.2 \u2013 Determination of the percent dispersion of a soil"},{"standard":"AS","method":"1289.3.9.1 - Liquid Limit - Four Point Cone Penetrometer","combo":"AS 1289.3.9.1 - Liquid Limit - Four Point Cone Penetrometer"},{"standard":"AS","method":"1289.3.9.2 - Liquid Limit - One Point Cone Penetrometer","combo":"AS 1289.3.9.2 - Liquid Limit - One Point Cone Penetrometer"},{"standard":"AS","method":"1289.4.1.1 \u2013 Organic Content Matter of a Soil","combo":"AS 1289.4.1.1 \u2013 Organic Content Matter of a Soil"},{"standard":"AS","method":"1289.4.2.1 \u2013 Sulphate Content","combo":"AS 1289.4.2.1 \u2013 Sulphate Content"},{"standard":"AS","method":"1289.4.3.1 \u2013 pH Level of a Soil","combo":"AS 1289.4.3.1 \u2013 pH Level of a Soil"},{"standard":"AS","method":"1289.4.4.1 - Electrical Resistivity","combo":"AS 1289.4.4.1 - Electrical Resistivity"},{"standard":"AS","method":"1289.5.1.1 - Standard Compaction","combo":"AS 1289.5.1.1 - Standard Compaction"},{"standard":"AS","method":"1289.5.2.1 - Modified Compaction","combo":"AS 1289.5.2.1 - Modified Compaction"},{"standard":"AS","method":"1289.5.4.1 - Dry Density Ratio, Moisture Variation & Moisture Ratio","combo":"AS 1289.5.4.1 - Dry Density Ratio, Moisture Variation & Moisture Ratio"},{"standard":"AS","method":"1289.5.4.2 - Assignment of OMC & MDD","combo":"AS 1289.5.4.2 - Assignment of OMC & MDD"},{"standard":"AS","method":"1289.5.8.1 - Field Nuclear Density","combo":"AS 1289.5.8.1 - Field Nuclear Density"},{"standard":"AS","method":"1289.6.1.1 - California Bearing Ratio (Soaked)","combo":"AS 1289.6.1.1 - California Bearing Ratio (Soaked)"},{"standard":"AS","method":"1289.6.3.2 - Dynamic Cone Penetrometer","combo":"AS 1289.6.3.2 - Dynamic Cone Penetrometer"},{"standard":"AS","method":"1289.6.3.3 - Perth Sand Penetrometer","combo":"AS 1289.6.3.3 - Perth Sand Penetrometer"},{"standard":"AS","method":"1289.6.7.1 - Permeability - Constant Head","combo":"AS 1289.6.7.1 - Permeability - Constant Head"},{"standard":"AS","method":"1289.6.7.2 - Permeability - Falling Head","combo":"AS 1289.6.7.2 - Permeability - Falling Head"},{"standard":"AS","method":"1289.6.9.1 \u2013 Clegg Impact Value","combo":"AS 1289.6.9.1 \u2013 Clegg Impact Value"},{"standard":"AS","method":"1289.7.1.1 - Shrink Swell Index","combo":"AS 1289.7.1.1 - Shrink Swell Index"},{"standard":"AS","method":"1290.3.8.3 - Pinhole","combo":"AS 1290.3.8.3 - Pinhole"},{"standard":"AS","method":"2341.10 - Rolling Thin Film Oven Test","combo":"AS 2341.10 - Rolling Thin Film Oven Test"},{"standard":"AS","method":"2341.12 - Determination of Penetration","combo":"AS 2341.12 - Determination of Penetration"},{"standard":"AS","method":"2341.15 - Distillation of Cutback Bitument","combo":"AS 2341.15 - Distillation of Cutback Bitument"},{"standard":"AS","method":"2341.18 - Softening Point (Ring & Ball)","combo":"AS 2341.18 - Softening Point (Ring & Ball)"},{"standard":"AS","method":"2341.20 - Determination of Sieve Residue for Bituminos Materials","combo":"AS 2341.20 - Determination of Sieve Residue for Bituminos Materials"},{"standard":"AS","method":"2341.21 - Sample Preparation","combo":"AS 2341.21 - Sample Preparation"},{"standard":"AS","method":"2341.22 \u2013 Determination of Particle Charge","combo":"AS 2341.22 \u2013 Determination of Particle Charge"},{"standard":"AS","method":"4133.4.1 \u2013 Point Load Strength \u2013 Index","combo":"AS 4133.4.1 \u2013 Point Load Strength \u2013 Index"},{"standard":"AS","method":"4489.6.1 - Lime Index - Available Lime (Not on Scope)","combo":"AS 4489.6.1 - Lime Index - Available Lime (Not on Scope)"},{"standard":"AS","method":"2341.14 - Determination of flashpoint of bitumen","combo":"AS 2341.14 - Determination of flashpoint of bitumen"},{"standard":"ATM","method":"-111 Handling Viscosity of Polymer Modified Binders (Brookfield Thermosel)","combo":"ATM-111 Handling Viscosity of Polymer Modified Binders (Brookfield Thermosel)"},{"standard":"ATM","method":"-112 Flash Point of Polymer Modified Binders","combo":"ATM-112 Flash Point of Polymer Modified Binders"},{"standard":"ATM","method":"-122 Torsional Recovery of Polymer Modified Binders","combo":"ATM-122 Torsional Recovery of Polymer Modified Binders"},{"standard":"ASNZS","method":"2341.2 - Determination of dynamic viscosity by vacuum capillary viscometer","combo":"ASNZS 2341.2 - Determination of dynamic viscosity by vacuum capillary viscometer"},{"standard":"ASNZS","method":"2341.23 - Residue From Evaporation","combo":"ASNZS 2341.23 - Residue From Evaporation"},{"standard":"ASNZS","method":"2341.4 - Determination of dynamic viscosity by rotational viscometer","combo":"ASNZS 2341.4 - Determination of dynamic viscosity by rotational viscometer"},{"standard":"ASNZS","method":"2341.8 - Determination of matter insoluble in toluene","combo":"ASNZS 2341.8 - Determination of matter insoluble in toluene"},{"standard":"ASNZS","method":"2891.3.2 - Binder content and aggregate grading - Centrifugal extraction method","combo":"ASNZS 2891.3.2 - Binder content and aggregate grading - Centrifugal extraction method"},{"standard":"ASNZS","method":"2891.9.1 - Determination of bulk density of compacted asphalt - Waxing procedure","combo":"ASNZS 2891.9.1 - Determination of bulk density of compacted asphalt - Waxing procedure"},{"standard":"AGPT","method":"- T053 - Repeat Load Triaxial (RLT)","combo":"AGPT - T053 - Repeat Load Triaxial (RLT)"},{"standard":"AGPT","method":"- T102 - Protocol for Handling Polymer Modified Binders","combo":"AGPT - T102 - Protocol for Handling Polymer Modified Binders"},{"standard":"AGPT","method":"- T108 - Segregation of Polymer Modified Binders","combo":"AGPT - T108 - Segregation of Polymer Modified Binders"},{"standard":"AGPT","method":"- T111 - Handling Viscosity of Polymer Modified Binders (Brookfield Thermosel)","combo":"AGPT - T111 - Handling Viscosity of Polymer Modified Binders (Brookfield Thermosel)"},{"standard":"AGPT","method":"- T112 - Flash Point of Polymer Modified Binders","combo":"AGPT - T112 - Flash Point of Polymer Modified Binders"},{"standard":"AGPT","method":"- T122 - Torsional Recovery of Polymer Modified Binders","combo":"AGPT - T122 - Torsional Recovery of Polymer Modified Binders"},{"standard":"AGPT","method":"- T131 - Softening Point","combo":"AGPT - T131 - Softening Point"},{"standard":"AGPT","method":"- T143 - Moisture Content \u2013 Crumbed Rubber","combo":"AGPT - T143 - Moisture Content \u2013 Crumbed Rubber"},{"standard":"AGPT","method":"- T160 - Handling Bitumens, Bituminous Emulsions & Cutback Bitumens in Preparation for Laboratory Testing","combo":"AGPT - T160 - Handling Bitumens, Bituminous Emulsions & Cutback Bitumens in Preparation for Laboratory Testing"},{"standard":"WA","method":"0.1 - Random Sample Site Location","combo":"WA 0.1 - Random Sample Site Location"},{"standard":"WA","method":"100.1 - Sampling","combo":"WA 100.1 - Sampling"},{"standard":"WA","method":"105.1 - Sample Preparation","combo":"WA 105.1 - Sample Preparation"},{"standard":"WA","method":"110.1 - Moisture Content","combo":"WA 110.1 - Moisture Content"},{"standard":"WA","method":"115.1 - Particle Size Distribution","combo":"WA 115.1 - Particle Size Distribution"},{"standard":"WA","method":"115.2 - Abbreviated Particle Size Distribution","combo":"WA 115.2 - Abbreviated Particle Size Distribution"},{"standard":"WA","method":"120.1 - Liquid Limit - Four Point Casagrande","combo":"WA 120.1 - Liquid Limit - Four Point Casagrande"},{"standard":"WA","method":"120.2 - Liquid Limit - Four Point Cone Penetrometer","combo":"WA 120.2 - Liquid Limit - Four Point Cone Penetrometer"},{"standard":"WA","method":"121.1 - Plastic Limit","combo":"WA 121.1 - Plastic Limit"},{"standard":"WA","method":"122.1 - Plasticity Index","combo":"WA 122.1 - Plasticity Index"},{"standard":"WA","method":"123.1 - Linear Shrinkage","combo":"WA 123.1 - Linear Shrinkage"},{"standard":"WA","method":"132.1 - Standard Compaction - Fine & Medium Grained Soils","combo":"WA 132.1 - Standard Compaction - Fine & Medium Grained Soils"},{"standard":"WA","method":"132.2 - Standard Compaction - Coarse Grained Soils","combo":"WA 132.2 - Standard Compaction - Coarse Grained Soils"},{"standard":"WA","method":"133.1 - Modified Compaction - Fine & Medium Grained Soils","combo":"WA 133.1 - Modified Compaction - Fine & Medium Grained Soils"},{"standard":"WA","method":"133.2 - Modified Compaction - Coarse Grained Soils","combo":"WA 133.2 - Modified Compaction - Coarse Grained Soils"},{"standard":"WA","method":"134.1 - Dry Density Ratio","combo":"WA 134.1 - Dry Density Ratio"},{"standard":"WA","method":"136.1 - Moisture Ratio","combo":"WA 136.1 - Moisture Ratio"},{"standard":"WA","method":"140.1 - Maximum Dry Compressive Strength","combo":"WA 140.1 - Maximum Dry Compressive Strength"},{"standard":"WA","method":"141.1 - California Bearing Ratio (Soaked)","combo":"WA 141.1 - California Bearing Ratio (Soaked)"},{"standard":"WA","method":"142.1 - Western Australian Confined Compression Test","combo":"WA 142.1 - Western Australian Confined Compression Test"},{"standard":"WA","method":"142.2 - Repeat Load Triaxial (RLT)","combo":"WA 142.2 - Repeat Load Triaxial (RLT)"},{"standard":"WA","method":"143.1 - Unconfined Compressive Strength","combo":"WA 143.1 - Unconfined Compressive Strength"},{"standard":"WA","method":"144.1 \u2013 Foreign Materials","combo":"WA 144.1 \u2013 Foreign Materials"},{"standard":"WA","method":"145.1 \u2013 Fractured Faces","combo":"WA 145.1 \u2013 Fractured Faces"},{"standard":"WA","method":"200.1 - Sampling Procedures for Aggregates","combo":"WA 200.1 - Sampling Procedures for Aggregates"},{"standard":"WA","method":"201.1 - Sampling and Preparation of Granulated Rubber","combo":"WA 201.1 - Sampling and Preparation of Granulated Rubber"},{"standard":"WA","method":"210.1 - Particle Size Distribution","combo":"WA 210.1 - Particle Size Distribution"},{"standard":"WA","method":"212.1 - Moisture Content","combo":"WA 212.1 - Moisture Content"},{"standard":"WA","method":"215.1 \u2013 Average Least Dimension","combo":"WA 215.1 \u2013 Average Least Dimension"},{"standard":"WA","method":"216.1 - Flakiness Index","combo":"WA 216.1 - Flakiness Index"},{"standard":"WA","method":"220.1 - Los Angeles Value","combo":"WA 220.1 - Los Angeles Value"},{"standard":"WA","method":"220.2 - Los Angeles Value - Crushed Limestone","combo":"WA 220.2 - Los Angeles Value - Crushed Limestone"},{"standard":"WA","method":"235.1 \u2013 Bulk Density \u2013 Crumbed Rubber","combo":"WA 235.1 \u2013 Bulk Density \u2013 Crumbed Rubber"},{"standard":"WA","method":"236.1 \u2013 Particle Size Distribution \u2013 Crumbed Rubber","combo":"WA 236.1 \u2013 Particle Size Distribution \u2013 Crumbed Rubber"},{"standard":"WA","method":"237.1 \u2013 Metallic Ion Content","combo":"WA 237.1 \u2013 Metallic Ion Content"},{"standard":"WA","method":"250.1 \u2013 Colour of Aggregate","combo":"WA 250.1 \u2013 Colour of Aggregate"},{"standard":"WA","method":"310.1 \u2013 Pendulum Skid Resistance","combo":"WA 310.1 \u2013 Pendulum Skid Resistance"},{"standard":"WA","method":"311.1 \u2013 Sand Texture Depth","combo":"WA 311.1 \u2013 Sand Texture Depth"},{"standard":"WA","method":"324.2 - Field Nuclear Density","combo":"WA 324.2 - Field Nuclear Density"},{"standard":"WA","method":"335.1 \u2013 Hydraulic Conductivity","combo":"WA 335.1 \u2013 Hydraulic Conductivity"},{"standard":"WA","method":"701.1 - Sampling & Storage","combo":"WA 701.1 - Sampling & Storage"},{"standard":"WA","method":"705.1-Clause 6.2.1 - Layer Thickness","combo":"WA 705.1-Clause 6.2.1 - Layer Thickness"},{"standard":"WA","method":"733.1 - Bulk Density & Void Content","combo":"WA 733.1 - Bulk Density & Void Content"},{"standard":"WA","method":"732.2 - Maximum Density of Asphalt - Rice Method","combo":"WA 732.2 - Maximum Density of Asphalt - Rice Method"},{"standard":"WA","method":"915.1 - Calcium Carbonate Content","combo":"WA 915.1 - Calcium Carbonate Content"},{"standard":"RLBMA","method":"- RLBMA Section 3 Appendix A - Compressive Strength & Mass per Unit Volume of Reconstituted Limestone Blocks","combo":"RLBMA - RLBMA Section 3 Appendix A - Compressive Strength & Mass per Unit Volume of Reconstituted Limestone Blocks"},{"standard":"ASTM","method":"- D 2974 - Organic Content","combo":"ASTM - D 2974 - Organic Content"},{"standard":"ASTM","method":"- F 1815 \u2013 Rootzone Hydraulic Cond, Bulk Density etc","combo":"ASTM - F 1815 \u2013 Rootzone Hydraulic Cond, Bulk Density etc"},{"standard":"AAT","method":"\u2013 Accelerated Abration Test","combo":"AAT \u2013 Accelerated Abration Test"},{"standard":"BSEN","method":"12945:2014 Neutralising Value","combo":"BSEN 12945:2014 Neutralising Value"},{"standard":"T239","method":"\u2013 Fractured Faces","combo":"T239 \u2013 Fractured Faces"},{"standard":"T276","method":"(RMS) - Limits of Foreign Material","combo":"T276 (RMS) - Limits of Foreign Material"},{"standard":"Calcium","method":"Calcium Content","combo":"Calcium Content"},{"standard":"Magnesium","method":"Magnesium Content","combo":"Magnesium Content"},{"standard":"Sodium","method":"Sodium Content","combo":"Sodium Content"},{"standard":"AS","method":"2891.13.1 - Resilient Modulus - Indirect Tensile Strength (ITM)","combo":"AS 2891.13.1 - Resilient Modulus - Indirect Tensile Strength (ITM)"},{"standard":"AGPT","method":"- T274 - Flexural Stiffness and Fatigue Performance - 3 beams","combo":"AGPT - T274 - Flexural Stiffness and Fatigue Performance - 3 beams"},{"standard":"AS","method":"2341.24 - Calculation of Non-Aqueous Volatiles Content","combo":"AS 2341.24 - Calculation of Non-Aqueous Volatiles Content"},{"standard":"AS","method":"2341.26 - Sieve Residue @ 150um or 710um","combo":"AS 2341.26 - Sieve Residue @ 150um or 710um"},{"standard":"AS","method":"2341.27 - Sedimentation","combo":"AS 2341.27 - Sedimentation"},{"standard":"AS","method":"2341.29 - Setting Time - Breaking Behaviour","combo":"AS 2341.29 - Setting Time - Breaking Behaviour"},{"standard":"AS","method":"2341.32 - pH Value","combo":"AS 2341.32 - pH Value"},{"standard":"WA","method":"910.1 - Chlorides and Total Soluble Salts in Soil and Water","combo":"WA 910.1 - Chlorides and Total Soluble Salts in Soil and Water"},{"standard":"AS","method":"4489.6.1 (In-house Method) - Cement Content","combo":"AS 4489.6.1 (In-house Method) - Cement Content"}];
-const LAB_EMAIL = "lisa.mcconachy@nwlabs.com.au";
-const TR_REFERENCE = 'TR-' + (function(){
+const LAB_EMAIL = "admin@nwlabs.com.au,badar.alesri@nwlabs.com.au";
+const LAB_BCC_EMAIL = "lisa.mcconachy@nwlabs.com.au";
+function generateReference(){
   const d = new Date();
   const p = n => String(n).padStart(2,'0');
-  return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
-})();
+  return 'TR-' + `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+let TR_REFERENCE = generateReference();
 document.getElementById('trRefDisplay').textContent = 'Ref: ' + TR_REFERENCE;
-const STATE_ABBR = {'Western Australia':'WA','New South Wales':'NSW','Victoria':'VIC','Queensland':'QLD','South Australia':'SA','Tasmania':'TAS','Australian Capital Territory':'ACT','Northern Territory':'NT'};
-const DESCRIPTION_OPTIONS = ['Bitumen','Mortar','Limestone Block','Asphalt Core','Water','Gravel','Sandy GRAVEL','Sand','Silty Sand','Ferricrete Gravel','Crushed Limestone','Crushed Rock','Aggregate Chip','Clay','Silt','DG Asphalt','Emulsion','Rubber Modified Bitumen','Polymer Modified Bitumen','Asphalt Slab','Concrete'];
+let batchSubmissions = [];
+let lastSubmission = null;
+const DESCRIPTION_OPTIONS = ['Bitumen','Mortar','Limestone Block','Asphalt Core','Water','Gravel','Sandy GRAVEL','Sand','Silty Sand','Ferricrete Gravel','Crushed Limestone','Crushed Rock','Aggregate Chip','Clay','Silt','DG Asphalt','Emulsion','Rubber Modified Bitumen','Polymer Modified Bitumen','Asphalt Slab','Concrete','Construction/Demolition Materials Block'];
 const PROPOSED_USE_OPTIONS = ['Site compliance testing','General fill','Structural fill','Engineered fill','Subgrade','Subbase','Basecourse','Concrete aggregate','Asphalt aggregate','Sealing aggregate','Production QA'];
 const MDD_WARNINGS = {
   'AS 1289.6.1.1 - California Bearing Ratio (Soaked)': 'MDD is required for CBR testing. Please request MDD testing or provide an existing MDD result.',
@@ -555,6 +588,20 @@ document.getElementById('nextBtn').addEventListener('click', ()=>{
       return;
     }
   }
+  if(currentStep === 3){
+    const counts = {};
+    Object.values(sampleRows).forEach(s=>{
+      const id = s.clientId.trim();
+      if(id) counts[id] = (counts[id]||0) + 1;
+    });
+    const dupes = Object.entries(counts).filter(([,c])=>c>1).map(([id])=>id);
+    if(dupes.length){
+      showWarning(`Duplicate Sample ID${dupes.length>1?'s':''} detected: "${dupes.join('", "')}". Please check these are correct before continuing.`, ()=>{
+        if(currentStep < TOTAL_STEPS) showStep(currentStep+1);
+      });
+      return;
+    }
+  }
   if(currentStep < TOTAL_STEPS) showStep(currentStep+1);
 });
 
@@ -581,52 +628,8 @@ document.getElementById('quoteNumber').addEventListener('input', (e)=>{
 
 /* ============ SUBURB AUTOCOMPLETE (AU) ============ */
 const suburbInput = document.getElementById('suburb');
-const suburbBox = document.getElementById('suburbSuggestions');
 const stateSelect = document.getElementById('state');
 const postcodeInput = document.getElementById('postcode');
-let suburbDebounce;
-suburbInput.addEventListener('input', ()=>{
-  clearTimeout(suburbDebounce);
-  const q = suburbInput.value.trim();
-  if(q.length < 3){ suburbBox.classList.remove('show'); return; }
-  suburbDebounce = setTimeout(()=> fetchSuburb(q), 400);
-});
-async function fetchSuburb(q){
-  try{
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=au&addressdetails=1&limit=8&q=${encodeURIComponent(q + ', Australia')}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if(!Array.isArray(data)){ suburbBox.classList.remove('show'); return; }
-    const seen = new Set();
-    const items = [];
-    data.forEach(d=>{
-      const a = d.address || {};
-      const name = a.suburb || a.town || a.city || a.village || a.municipality || a.county;
-      if(!name) return;
-      const stateFull = a.state || '';
-      const abbr = STATE_ABBR[stateFull] || stateFull;
-      const postcode = a.postcode || '';
-      const key = name + '|' + abbr + '|' + postcode;
-      if(seen.has(key)) return;
-      seen.add(key);
-      items.push({name, abbr, postcode});
-    });
-    if(items.length === 0){ suburbBox.classList.remove('show'); return; }
-    suburbBox.innerHTML = items.map((it,i)=>`<div class="suggestion-item" data-i="${i}">${it.name}<small>${it.abbr}${it.postcode ? ' · ' + it.postcode : ''}</small></div>`).join('');
-    suburbBox._items = items;
-    suburbBox.classList.add('show');
-  }catch(e){ suburbBox.classList.remove('show'); }
-}
-suburbBox.addEventListener('click', (e)=>{
-  const item = e.target.closest('.suggestion-item');
-  if(!item) return;
-  const it = suburbBox._items[parseInt(item.dataset.i,10)];
-  suburbInput.value = it.name;
-  if(it.abbr) stateSelect.value = it.abbr;
-  if(it.postcode) postcodeInput.value = it.postcode;
-  suburbBox.classList.remove('show');
-});
-document.addEventListener('click', (e)=>{ if(e.target !== suburbInput && !suburbBox.contains(e.target)) suburbBox.classList.remove('show'); });
 
 /* ============ EMAIL REPORT RECIPIENTS ============ */
 let emailCount = 0;
@@ -640,7 +643,7 @@ function buildEmailRow(isPrimary){
   const row = document.createElement('div');
   row.className = 'email-row';
   row.id = 'email-'+id;
-  row.innerHTML = `<input type="email" ${isPrimary?'id="primaryReportEmail" name="primaryReportEmail"':'name="reportEmail'+id+'"'} autocomplete="email" placeholder="name@company.com.au" ${isPrimary?'required':''}>` +
+  row.innerHTML = `<input type="email" ${isPrimary?'id="primaryReportEmail" name="primaryReportEmail"':'name="reportEmail'+id+'"'} placeholder="name@company.com.au" ${isPrimary?'required':''}>` +
     (isPrimary ? '' : '<button type="button" class="remove-btn" title="Remove">✕</button>');
   document.getElementById('reportEmailList').appendChild(row);
   const inp = row.querySelector('input');
@@ -774,10 +777,48 @@ function optionsHtml(list, current){
   return '<option value="">Select…</option>' + list.map(o=>`<option value="${o}" ${current===o?'selected':''}>${o}</option>`).join('') + `<option value="__other__" ${current==='__other__'?'selected':''}>Other…</option>`;
 }
 
+let ACTIVE_DESCRIPTION_OPTIONS = [...DESCRIPTION_OPTIONS];
+function refreshDescriptionDatalist(extra){
+  ACTIVE_DESCRIPTION_OPTIONS = [...(extra || []), ...DESCRIPTION_OPTIONS];
+}
+refreshDescriptionDatalist();
+
+function showDescFloatingBox(inputEl, showAll, onSelect){
+  const box = document.getElementById('descFloatingBox');
+  const q = showAll ? '' : inputEl.value.trim().toLowerCase();
+  const matches = q ? ACTIVE_DESCRIPTION_OPTIONS.filter(o=> o.toLowerCase().includes(q)) : ACTIVE_DESCRIPTION_OPTIONS;
+  if(matches.length === 0){ box.classList.remove('show'); return; }
+  box.innerHTML = matches.map((o,i)=>`<div class="suggestion-item" data-i="${i}">${o}</div>`).join('');
+  box._items = matches;
+  box._onSelect = onSelect;
+  const rect = inputEl.getBoundingClientRect();
+  box.style.left = rect.left + 'px';
+  box.style.top = (rect.bottom + 2) + 'px';
+  box.style.width = rect.width + 'px';
+  box.classList.add('show');
+}
+function hideDescFloatingBox(){
+  document.getElementById('descFloatingBox').classList.remove('show');
+}
+document.getElementById('descFloatingBox').addEventListener('mousedown', (e)=>{
+  const box = document.getElementById('descFloatingBox');
+  const item = e.target.closest('.suggestion-item');
+  if(!item || !box._items) return;
+  const val = box._items[parseInt(item.dataset.i,10)];
+  if(box._onSelect) box._onSelect(val);
+  box.classList.remove('show');
+});
+window.addEventListener('scroll', (e)=>{
+  const box = document.getElementById('descFloatingBox');
+  if(box.contains(e.target)) return; // scrolling inside the dropdown itself — keep it open
+  hideDescFloatingBox();
+}, true);
+window.addEventListener('resize', hideDescFloatingBox);
+
 function buildSampleRow(){
   sampleCount++;
   const id = sampleCount;
-  sampleRows[id] = {clientId:'', depth:'', dateSampled:'', description:'', descOther:'', proposedUse:'', useOther:'', density:'', checks:new Set()};
+  sampleRows[id] = {clientId:'', depth:'', dateSampled:'', description:'', proposedUse:'', useOther:'', density:'', checks:new Set()};
   renderSampleTable();
 }
 function removeSample(id){ delete sampleRows[id]; renderSampleTable(); }
@@ -805,7 +846,7 @@ function renderSampleTable(){
       e.stopPropagation();
       const which = btn.dataset.copy;
       if(which === 'dateSampled') copyFirstToAll(['dateSampled']);
-      else if(which === 'description') copyFirstToAll(['description','descOther']);
+      else if(which === 'description') copyFirstToAll(['description']);
       else if(which === 'proposedUse') copyFirstToAll(['proposedUse','useOther']);
     });
   });
@@ -820,8 +861,7 @@ function renderSampleTable(){
       <td><input type="text" class="tbl-input" data-role="depth" placeholder="m" value="${s.depth}"></td>
       <td><input type="date" class="tbl-input" data-role="dateSampled" value="${s.dateSampled}"></td>
       <td>
-        <select class="tbl-select" data-role="description">${optionsHtml(DESCRIPTION_OPTIONS, s.description)}</select>
-        <input type="text" class="tbl-other" data-role="descOther" placeholder="Specify…" value="${s.descOther}" style="display:${s.description==='__other__'?'block':'none'};">
+        <input type="text" class="tbl-input" data-role="description" autocomplete="off" placeholder="Select or type…" value="${(s.description||'').replace(/"/g,'&quot;')}">
       </td>
       <td>
         <select class="tbl-select" data-role="proposedUse">${optionsHtml(PROPOSED_USE_OPTIONS, s.proposedUse)}</select>
@@ -833,20 +873,19 @@ function renderSampleTable(){
     `;
     body.appendChild(tr);
 
-    tr.querySelector('[data-role="clientId"]').addEventListener('input', e=> s.clientId = e.target.value);
+    tr.querySelector('[data-role="clientId"]').addEventListener('input', e=>{ s.clientId = e.target.value; updateDupeIdNotice(); });
     tr.querySelector('[data-role="depth"]').addEventListener('input', e=> s.depth = e.target.value);
     tr.querySelector('[data-role="dateSampled"]').addEventListener('input', e=> s.dateSampled = e.target.value);
     tr.querySelector('[data-role="density"]').addEventListener('input', e=> s.density = e.target.value);
 
-    const descSel = tr.querySelector('[data-role="description"]');
-    const descOther = tr.querySelector('[data-role="descOther"]');
-    descSel.addEventListener('change', ()=>{
-      s.description = descSel.value;
-      descOther.style.display = descSel.value === '__other__' ? 'block' : 'none';
-      if(descSel.value === '__other__') descOther.focus();
+    const descInput = tr.querySelector('[data-role="description"]');
+    descInput.addEventListener('focus', ()=> showDescFloatingBox(descInput, true, (val)=>{ descInput.value = val; s.description = val; updateCoreNotice(); }));
+    descInput.addEventListener('input', ()=>{
+      s.description = descInput.value;
+      showDescFloatingBox(descInput, false, (val)=>{ descInput.value = val; s.description = val; updateCoreNotice(); });
       updateCoreNotice();
     });
-    descOther.addEventListener('input', e=>{ s.descOther = e.target.value; updateCoreNotice(); });
+    descInput.addEventListener('blur', ()=> setTimeout(hideDescFloatingBox, 150));
 
     const useSel = tr.querySelector('[data-role="proposedUse"]');
     const useOther = tr.querySelector('[data-role="useOther"]');
@@ -878,6 +917,7 @@ function renderSampleTable(){
     tmIds.map(tid=>`<td data-total="${tid}">0</td>`).join('') + `<td></td>`;
   updateTotals();
   updateCoreNotice();
+  updateDupeIdNotice();
 }
 
 function copyFirstToAll(fields){
@@ -897,6 +937,23 @@ function updateCoreNotice(){
   notice.style.display = hasCore ? 'block' : 'none';
 }
 
+function updateDupeIdNotice(){
+  const notice = document.getElementById('dupeIdNotice');
+  if(!notice) return;
+  const counts = {};
+  Object.values(sampleRows).forEach(s=>{
+    const id = s.clientId.trim();
+    if(id) counts[id] = (counts[id]||0) + 1;
+  });
+  const dupes = Object.entries(counts).filter(([,c])=>c>1).map(([id])=>id);
+  if(dupes.length){
+    notice.innerHTML = `<strong>Duplicate Sample ID${dupes.length>1?'s':''} detected</strong><p>"${dupes.join('", "')}" ${dupes.length>1?'are':'is'} used on more than one sample — please check these are correct.</p>`;
+    notice.style.display = 'block';
+  } else {
+    notice.style.display = 'none';
+  }
+}
+
 /* ============ REVIEW SCREEN ============ */
 function computeWarnings(){
   const warnings = [];
@@ -908,8 +965,6 @@ function computeWarnings(){
   Object.entries(idCounts).forEach(([id,count])=>{ if(count>1) warnings.push(`Client Sample ID "${id}" is used on ${count} samples — check this is intentional.`); });
 
   const today = new Date(); today.setHours(0,0,0,0);
-  const dsGlobal = document.getElementById('dateSampled').value;
-  if(dsGlobal && new Date(dsGlobal) > today) warnings.push('The Date Sampled on Step 1 is in the future.');
   Object.entries(sampleRows).forEach(([sid,s])=>{
     if(s.dateSampled && new Date(s.dateSampled) > today) warnings.push(`Sample ${sid}: Date Sampled is in the future.`);
   });
@@ -933,12 +988,12 @@ function renderReview(){
     ['Client address', fullAddress, 'TRN / Ref #', document.getElementById('trnRef').value || '—'],
     ['Contact number', document.getElementById('contactNumber').value || '—', 'PO number', document.getElementById('poNumber').value || '—'],
     ['Submitted by', document.getElementById('submittedBy').value, 'Submitter email', document.getElementById('submitterEmail').value],
-    ['Sampled by', document.getElementById('sampledBy').value || '—', 'Date sampled', document.getElementById('dateSampled').value || '—'],
-    ['Testing urgency', document.getElementById('urgency').value || '—', 'NWL quote provided', quoteText],
-    ['NWL contact person', document.getElementById('nwlContact').value || '—', 'Email reports to', emailList || '—'],
+    ['Sampled by', document.getElementById('sampledBy').value || '—', 'Testing urgency', document.getElementById('urgency').value || '—'],
+    ['NWL quote provided', quoteText, 'NWL contact person', document.getElementById('nwlContact').value || '—'],
+    ['Email reports to', emailList || '—', '', ''],
   ];
   document.getElementById('reviewClientProject').innerHTML = kvBody.map(([l1,v1,l2,v2])=>
-    `<tr><td class="rkv-label">${l1}</td><td>${v1||'—'}</td><td class="rkv-label">${l2}</td><td>${v2||'—'}</td></tr>`
+    `<tr><td class="rkv-label">${l1}</td><td>${v1||'—'}</td><td class="rkv-label">${l2||''}</td><td>${l2?(v2||'—'):''}</td></tr>`
   ).join('');
 
   renderReviewSampleTable();
@@ -1016,10 +1071,18 @@ function updateTotals(){
   });
 }
 
-function descriptionLabel(s){ return s.description === '__other__' ? (s.descOther || '(unspecified)') : (s.description || '—'); }
+function descriptionLabel(s){ return s.description || '—'; }
 function useLabel(s){ return s.proposedUse === '__other__' ? (s.useOther || '(unspecified)') : (s.proposedUse || '—'); }
 
 document.getElementById('addSampleBtn').addEventListener('click', buildSampleRow);
+function incrementSampleId(id){
+  const m = String(id).match(/^(.*?)(\d+)(\D*)$/);
+  if(!m) return id; // no trailing number found — leave as-is for manual editing
+  const [, prefix, digits, suffix] = m;
+  const incremented = String(parseInt(digits, 10) + 1).padStart(digits.length, '0');
+  return prefix + incremented + suffix;
+}
+
 document.getElementById('duplicateSampleBtn').addEventListener('click', ()=>{
   const ids = Object.keys(sampleRows);
   if(ids.length === 0){ buildSampleRow(); return; }
@@ -1028,11 +1091,13 @@ document.getElementById('duplicateSampleBtn').addEventListener('click', ()=>{
   sampleCount++;
   const newId = sampleCount;
   sampleRows[newId] = {
-    clientId: '', // left blank — must be unique per sample
-    depth: src.depth, dateSampled: src.dateSampled,
-    description: src.description, descOther: src.descOther,
+    clientId: incrementSampleId(src.clientId), // e.g. "OO123" -> "OO124", "TP01" -> "TP02"
+    depth: '', // never duplicated — depth varies unpredictably, no pattern to follow
+    dateSampled: src.dateSampled,
+    description: src.description,
     proposedUse: src.proposedUse, useOther: src.useOther,
-    density: src.density, checks: new Set(src.checks)
+    density: '', // never duplicated — comments/density/OMC/surcharge are sample-specific
+    checks: new Set(src.checks)
   };
   renderSampleTable();
 });
@@ -1049,7 +1114,7 @@ const DRAFT_KEY = 'nwl_tr_draft_v1';
 function serializeForm(){
   const fieldIds = ['clientInvoice','clientReport','streetAddress','suburb','state','postcode','project','location',
     'contactNumber','poNumber','trnRef','quoteProvided','quoteNumber','nwlContact','submittedBy','submitterEmail',
-    'sampledBy','dateSampled','urgency','remarks'];
+    'sampledBy','urgency','remarks'];
   const fields = {};
   fieldIds.forEach(id=>{ const el = document.getElementById(id); if(el) fields[id] = el.value; });
   return {
@@ -1123,7 +1188,7 @@ function restoreDraft(draft){
     const id = sampleCount;
     sampleRows[id] = {
       clientId: s.clientId||'', depth: s.depth||'', dateSampled: s.dateSampled||'',
-      description: s.description||'', descOther: s.descOther||'', proposedUse: s.proposedUse||'',
+      description: s.description||'', proposedUse: s.proposedUse||'',
       useOther: s.useOther||'', density: s.density||'', checks: new Set((s.checks||[]).map(String))
     };
   });
@@ -1151,15 +1216,17 @@ function checkForDraft(){
     document.getElementById('draftBanner').style.display = 'none';
   };
 }
+document.getElementById('trForm').addEventListener('submit', (e)=> e.preventDefault());
 checkForDraft();
 
 /* ============ SAVED TEMPLATES (client details + test methods, for repeat clients) ============ */
 const TEMPLATES_KEY = 'nwl_tr_templates_v1';
 
 function captureClientAndTests(){
-  // Deliberately excludes project, location, trnRef, dateSampled, remarks — those change per request
+  // Deliberately excludes project, location, trnRef, poNumber, quoteProvided, quoteNumber,
+  // dateSampled, remarks — those are per-request/transactional and always reset fresh.
   const fieldIds = ['clientInvoice','clientReport','streetAddress','suburb','state','postcode',
-    'contactNumber','poNumber','quoteProvided','quoteNumber','nwlContact','submittedBy','submitterEmail',
+    'contactNumber','nwlContact','submittedBy','submitterEmail',
     'sampledBy','urgency'];
   const fields = {};
   fieldIds.forEach(id=>{ const el = document.getElementById(id); if(el) fields[id] = el.value; });
@@ -1174,7 +1241,12 @@ function captureClientAndTests(){
 
 function applyClientAndTests(state){
   const f = state.fields || {};
-  Object.keys(f).forEach(id=>{ const el = document.getElementById(id); if(el) el.value = f[id]; });
+  Object.keys(f).forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.value = f[id];
+    el.classList.toggle('needs-attention', !String(f[id] || '').trim());
+  });
   sameChk.checked = !!state.sameAsInvoice;
   syncReportName();
   quoteNumberField.classList.toggle('hidden', quoteProvidedEl.value !== 'Yes');
@@ -1187,7 +1259,11 @@ function applyClientAndTests(state){
     buildEmailRow(i === 0);
     const id = emailCount;
     const inp = document.querySelector(`#email-${id} input`);
-    if(inp){ inp.value = val || ''; reportEmails[id] = val || ''; }
+    if(inp){
+      inp.value = val || '';
+      reportEmails[id] = val || '';
+      inp.classList.toggle('needs-attention', !String(val || '').trim());
+    }
   });
   sameAsSubmitterChk.checked = !!state.sameAsSubmitter;
   syncPrimaryReportEmail();
@@ -1207,6 +1283,9 @@ function applyClientAndTests(state){
   refreshSampleColumns();
   updateRailIndicators();
 }
+['input','change'].forEach(evt => document.addEventListener(evt, (e)=>{
+  if(e.target && e.target.classList && e.target.classList.contains('needs-attention')) e.target.classList.remove('needs-attention');
+}));
 
 function getTemplates(){
   try{ return JSON.parse(localStorage.getItem(TEMPLATES_KEY) || '[]'); }catch(e){ return []; }
@@ -1215,35 +1294,82 @@ function saveTemplatesList(list){
   try{ localStorage.setItem(TEMPLATES_KEY, JSON.stringify(list)); }catch(e){}
 }
 function refreshTemplateSelect(){
-  const sel = document.getElementById('templateSelect');
   const templates = getTemplates();
-  sel.innerHTML = '<option value="">' + (templates.length ? 'Select a saved template…' : 'No saved templates yet') + '</option>'
+  const optionsHtml = '<option value="">' + (templates.length ? 'Select a saved template…' : 'No saved templates yet') + '</option>'
     + templates.map((t,i)=>`<option value="${i}">${t.name}</option>`).join('');
+  ['templateSelect','templateSelect2'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(sel) sel.innerHTML = optionsHtml;
+  });
 }
-document.getElementById('saveTemplateBtn').addEventListener('click', ()=>{
+function saveCurrentAsTemplate(){
   const name = window.prompt('Name this template (e.g. "ABC Construction — Cement Content"):');
   if(!name || !name.trim()) return;
   const templates = getTemplates();
-  templates.push(Object.assign({name: name.trim(), savedAt: Date.now()}, captureClientAndTests()));
+  const customDescriptions = [...new Set(
+    Object.values(sampleRows).map(s=>s.description).filter(d=> d && d.trim() && !DESCRIPTION_OPTIONS.includes(d))
+  )];
+  templates.push(Object.assign({name: name.trim(), savedAt: Date.now(), customDescriptions}, captureClientAndTests()));
   saveTemplatesList(templates);
   refreshTemplateSelect();
-});
-document.getElementById('loadTemplateBtn').addEventListener('click', ()=>{
-  const idx = document.getElementById('templateSelect').value;
+}
+function loadTemplateFrom(selectId){
+  const idx = document.getElementById(selectId).value;
   if(idx === '') return;
   const templates = getTemplates();
   const t = templates[parseInt(idx,10)];
-  if(t) applyClientAndTests(t);
-});
-document.getElementById('deleteTemplateBtn').addEventListener('click', ()=>{
-  const sel = document.getElementById('templateSelect');
+  if(t){
+    applyClientAndTests(t);
+    highlightAllBlankFields();
+    refreshDescriptionDatalist(t.customDescriptions || []);
+  }
+}
+function deleteTemplateFrom(selectId){
+  const sel = document.getElementById(selectId);
   const idx = sel.value;
   if(idx === '') return;
   const templates = getTemplates();
   templates.splice(parseInt(idx,10), 1);
   saveTemplatesList(templates);
   refreshTemplateSelect();
-});
+}
+function updateTemplateFrom(selectId){
+  const sel = document.getElementById(selectId);
+  const idx = sel.value;
+  if(idx === ''){ window.alert('Select a template first, then click Update selected.'); return; }
+  const templates = getTemplates();
+  const existing = templates[parseInt(idx,10)];
+  if(!existing) return;
+  const customDescriptions = [...new Set(
+    Object.values(sampleRows).map(s=>s.description).filter(d=> d && d.trim() && !DESCRIPTION_OPTIONS.includes(d))
+  )];
+  templates[parseInt(idx,10)] = Object.assign({name: existing.name, savedAt: Date.now(), customDescriptions}, captureClientAndTests());
+  saveTemplatesList(templates);
+  refreshTemplateSelect();
+  sel.value = idx;
+}
+document.getElementById('saveTemplateBtn').addEventListener('click', saveCurrentAsTemplate);
+document.getElementById('saveTemplateBtn2').addEventListener('click', saveCurrentAsTemplate);
+
+const ALL_STEP1_FIELD_IDS = ['clientInvoice','clientReport','streetAddress','suburb','state','postcode',
+  'project','location','contactNumber','poNumber','trnRef','quoteNumber','submittedBy','submitterEmail'];
+function highlightAllBlankFields(){
+  ALL_STEP1_FIELD_IDS.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.classList.toggle('needs-attention', !el.value.trim());
+  });
+  document.querySelectorAll('#reportEmailList input').forEach(inp=>{
+    inp.classList.toggle('needs-attention', !inp.value.trim());
+  });
+}
+
+document.getElementById('loadTemplateBtn').addEventListener('click', ()=> loadTemplateFrom('templateSelect'));
+document.getElementById('loadTemplateBtn2').addEventListener('click', ()=> loadTemplateFrom('templateSelect2'));
+document.getElementById('deleteTemplateBtn').addEventListener('click', ()=> deleteTemplateFrom('templateSelect'));
+document.getElementById('deleteTemplateBtn2').addEventListener('click', ()=> deleteTemplateFrom('templateSelect2'));
+document.getElementById('updateTemplateBtn').addEventListener('click', ()=> updateTemplateFrom('templateSelect'));
+document.getElementById('updateTemplateBtn2').addEventListener('click', ()=> updateTemplateFrom('templateSelect2'));
 refreshTemplateSelect();
 
 /* ============ VALIDATION ============ */
@@ -1304,9 +1430,9 @@ function buildPdf(){
     ['Client address', fullAddress, 'TRN / Ref #', document.getElementById('trnRef').value || '—'],
     ['Contact number', document.getElementById('contactNumber').value || '—', 'PO number', document.getElementById('poNumber').value || '—'],
     ['Submitted by', document.getElementById('submittedBy').value, 'Submitter email', document.getElementById('submitterEmail').value],
-    ['Sampled by', document.getElementById('sampledBy').value || '—', 'Date sampled', document.getElementById('dateSampled').value || '—'],
-    ['Testing urgency', document.getElementById('urgency').value || '—', 'NWL quote provided', quoteText],
-    ['NWL contact person', document.getElementById('nwlContact').value || '—', 'Email reports to', emailList],
+    ['Sampled by', document.getElementById('sampledBy').value || '—', 'Testing urgency', document.getElementById('urgency').value || '—'],
+    ['NWL quote provided', quoteText, 'NWL contact person', document.getElementById('nwlContact').value || '—'],
+    ['Email reports to', emailList, '', ''],
   ];
 
   doc.autoTable({
@@ -1380,31 +1506,102 @@ function buildPdf(){
   kv('Accepted by', document.getElementById('submittedBy').value + ' — ' + new Date().toLocaleDateString());
 
   const clientSlug = (clientReportEl.value || 'TestRequest').replace(/[^a-z0-9]+/gi,'_');
-  doc.save(`${TR_REFERENCE}_${clientSlug}.pdf`);
+  const filename = `${TR_REFERENCE}_${clientSlug}.pdf`;
+  doc.save(filename);
+  lastSubmission = {
+    reference: TR_REFERENCE,
+    project: document.getElementById('project').value,
+    location: document.getElementById('location').value,
+    filename
+  };
 }
 
+function dedupeEmails(list){
+  const seen = new Set();
+  const result = [];
+  list.forEach(e=>{
+    const trimmed = (e||'').trim();
+    if(!trimmed) return;
+    const key = trimmed.toLowerCase();
+    if(!seen.has(key)){ seen.add(key); result.push(trimmed); }
+  });
+  return result;
+}
 function openEmailDraft(){
+  if(lastSubmission){ batchSubmissions.push(lastSubmission); lastSubmission = null; }
   const client = clientReportEl.value;
-  const project = document.getElementById('project').value;
   const submitter = document.getElementById('submitterEmail').value;
   const otherEmails = Object.values(reportEmails).filter(v=>v && v.trim());
-  const ccList = [submitter, ...otherEmails].filter(Boolean).join(',');
-  const subject = encodeURIComponent(`Test Request ${TR_REFERENCE} — ${client} — ${project}`);
+  const ccList = dedupeEmails([submitter, ...otherEmails]).join(',');
+  const refs = batchSubmissions.map(s=>s.reference).join(', ');
+  const isBatch = batchSubmissions.length > 1;
+  const jobLines = batchSubmissions.map(s=>`- ${s.reference}: ${s.project} (${s.location})`).join('\n');
+  const firstProject = batchSubmissions[0] ? batchSubmissions[0].project : '';
+  const subject = encodeURIComponent(isBatch
+    ? `Test Requests ${refs} — ${client}`
+    : `Test Request ${refs} — ${client} — ${firstProject}`);
   const body = encodeURIComponent(
 `Hi NWL team,
 
-Please find our Test Request attached (PDF).
+Please find our Test Request${isBatch?'s':''} attached (${batchSubmissions.length} PDF${isBatch?'s':''} — please check all are attached before sending).
 
-Reference: ${TR_REFERENCE}
+${jobLines}
+
 Client: ${client}
-Project: ${project}
 Submitted by: ${document.getElementById('submittedBy').value}
 
 Thanks,
 ${document.getElementById('submittedBy').value}`);
-  const mailto = `mailto:${LAB_EMAIL}?cc=${encodeURIComponent(ccList)}&subject=${subject}&body=${body}`;
+  const mailto = `mailto:${LAB_EMAIL}?cc=${encodeURIComponent(ccList)}&bcc=${encodeURIComponent(LAB_BCC_EMAIL)}&subject=${subject}&body=${body}`;
   window.location.href = mailto;
+  batchSubmissions = [];
 }
+
+function updateConfirmOverlay(){
+  const count = batchSubmissions.length + (lastSubmission ? 1 : 0);
+  document.getElementById('confirmTitle').textContent = count > 1
+    ? `${count} PDFs downloaded so far`
+    : 'Your PDF has been downloaded';
+  document.getElementById('finishIntro').textContent = count > 1
+    ? `To finish and send all ${count} requests:`
+    : 'To finish sending your request:';
+}
+
+document.getElementById('startAnotherBtn').addEventListener('click', ()=>{
+  const keepPL = document.getElementById('keepProjectLocation').checked;
+  if(lastSubmission){ batchSubmissions.push(lastSubmission); lastSubmission = null; }
+
+  document.getElementById('sampleTableBody').innerHTML = '';
+  sampleCount = 0;
+  Object.keys(sampleRows).forEach(k=> delete sampleRows[k]);
+  buildSampleRow();
+
+  if(!keepPL){
+    document.getElementById('project').value = '';
+    document.getElementById('location').value = '';
+  }
+
+  document.getElementById('remarks').value = '';
+  document.getElementById('coreNotice').style.display = 'none';
+
+  document.getElementById('poNumber').value = '';
+  document.getElementById('trnRef').value = '';
+  document.getElementById('quoteProvided').value = '';
+  document.getElementById('quoteNumber').value = '';
+  document.getElementById('quoteNumberField').classList.add('hidden');
+
+  document.getElementById('declAccept').checked = false;
+  document.getElementById('declHazMat').checked = false;
+
+  TR_REFERENCE = generateReference();
+  document.getElementById('trRefDisplay').textContent = 'Ref: ' + TR_REFERENCE;
+
+  document.getElementById('keepProjectLocation').checked = false;
+  document.getElementById('confirm-overlay').classList.remove('show');
+
+  updateRailIndicators();
+  showStep(keepPL ? 3 : 1);
+});
 
 document.getElementById('submitBtn').addEventListener('click', ()=>{
   const errs = collectErrors();
@@ -1421,6 +1618,7 @@ document.getElementById('submitBtn').addEventListener('click', ()=>{
   errorBox.classList.remove('show');
   buildPdf();
   clearDraft();
+  updateConfirmOverlay();
   document.getElementById('confirm-overlay').classList.add('show');
 });
 document.getElementById('openEmailBtn').addEventListener('click', openEmailDraft);

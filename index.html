@@ -107,6 +107,8 @@ select{appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns=
 
 .tm-row{display:grid;grid-template-columns:34px 1fr 34px;gap:10px;align-items:start;padding:12px 0;border-bottom:1px dashed var(--line);}
 .tm-row:last-child{border-bottom:none;}
+.tm-invalid input[data-role="search"]{border-color:var(--danger);background:#fdf3f1;}
+.tm-hint{font-size:11.5px;color:var(--danger);margin-top:4px;}
 .tm-index{font-family:var(--mono);font-weight:700;color:var(--accent-dark);text-align:center;font-size:15px;padding-top:8px;}
 .remove-btn{align-self:start;background:none;border:1px solid var(--line);color:var(--ink-soft);width:28px;height:28px;cursor:pointer;font-size:15px;line-height:1;margin-top:2px;}
 .remove-btn:hover{border-color:var(--danger);color:var(--danger);}
@@ -344,7 +346,7 @@ table.est-table tbody tr:last-child td{border-bottom:1px solid var(--accent);}
   <div class="panel">
     <div class="panel-head"><div class="panel-num">2</div><h2>Test Methods</h2><span class="hint">Type to search — e.g. "compaction" or "AS 1289"</span></div>
     <div class="panel-body">
-      <p style="font-size:12.5px;color:var(--ink-soft);margin-top:0;">Search by standard, method number, or test name. Can't find it? Just type the test name and method number and leave it — that's treated as a custom entry. If left unspecified, testing will default to AS test methods.</p>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin-top:0;">Search by standard, method number, or test name, then <strong>click a result from the list</strong> to select it. Only methods from the list can be selected. If left unspecified, testing will default to AS test methods.</p>
       <p style="font-size:12.5px;color:var(--ink-soft);margin:-6px 0 16px;"><strong>Test method not available in the list?</strong> Note it in the Remarks section (Step 4) instead — NWL will contact you regarding the method and whether we can facilitate it.</p>
       <div id="tmList"></div>
       <button type="button" class="btn add-row-btn" id="addTmBtn">+ Add test method</button>
@@ -708,7 +710,13 @@ function buildTmRow(){
     const q = input.value.trim();
     if(q.length < 2){ box.classList.remove('show'); updateLegend(); refreshSampleColumns(); return; }
     const results = searchTests(q);
-    if(results.length === 0){ box.classList.remove('show'); updateLegend(); refreshSampleColumns(); return; }
+    row.classList.remove('tm-invalid');
+    if(results.length === 0){
+      box.innerHTML = '<div class="suggestion-item" style="cursor:default;color:var(--warn);">No matching test method. Try fewer words (e.g. "compaction"), or note the method in Remarks (Step 4).</div>';
+      box._items = [];
+      box.classList.add('show');
+      updateLegend(); refreshSampleColumns(); return;
+    }
     box.innerHTML = results.map((r,i)=>`<div class="suggestion-item" data-i="${i}">${r.combo}</div>`).join('');
     box._items = results;
     box.classList.add('show');
@@ -717,8 +725,11 @@ function buildTmRow(){
   });
   box.addEventListener('click', (e)=>{
     const item = e.target.closest('.suggestion-item');
-    if(!item) return;
+    if(!item || item.dataset.i === undefined) return;
     const r = box._items[parseInt(item.dataset.i,10)];
+    if(!r) return;
+    row.classList.remove('tm-invalid');
+    const oldHint = row.querySelector('.tm-hint'); if(oldHint) oldHint.remove();
     input.value = r.combo;
     tmRows[id].value = r.combo;
     tmRows[id].matched = r;
@@ -728,6 +739,31 @@ function buildTmRow(){
     if(MDD_WARNINGS[r.combo]) showWarning(MDD_WARNINGS[r.combo]);
   });
   document.addEventListener('click', (e)=>{ if(e.target !== input && !box.contains(e.target)) box.classList.remove('show'); });
+  // Enter picks the top suggestion
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const first = box.querySelector('.suggestion-item[data-i="0"]');
+      if(first && box.classList.contains('show')) first.click();
+    }
+  });
+  // Leaving the box with text that isn't a listed method: flag it and clear it
+  input.addEventListener('blur', ()=>{
+    setTimeout(()=>{
+      if(tmRows[id] && input.value.trim() && !tmRows[id].matched){
+        row.classList.add('tm-invalid');
+        if(!row.querySelector('.tm-hint')){
+          const h = document.createElement('div');
+          h.className = 'tm-hint';
+          h.textContent = 'Please click a method from the list. If it isn’t listed, clear this row and describe it in Remarks (Step 4).';
+          input.parentNode.appendChild(h);
+        }
+      } else {
+        const h = row.querySelector('.tm-hint'); if(h) h.remove();
+        row.classList.remove('tm-invalid');
+      }
+    }, 200);
+  });
 
   row.querySelector('.remove-btn').addEventListener('click', ()=>{
     delete tmRows[id]; row.remove(); updateLegend(); refreshSampleColumns();
@@ -1048,7 +1084,7 @@ function updateRailIndicators(){
         && document.getElementById('project').value.trim() && document.getElementById('location').value.trim()
         && document.getElementById('submittedBy').value.trim() && document.getElementById('submitterEmail').value.trim()
         && Object.values(reportEmails).some(v=>v && v.trim())),
-    2: Object.values(tmRows).some(t=>t.value && t.value.trim()),
+    2: Object.values(tmRows).some(t=>t.matched),
     3: Object.values(sampleRows).some(s=>s.clientId && s.clientId.trim()),
     6: !!(document.getElementById('declAccept').checked && document.getElementById('declHazMat').checked)
   };
@@ -1385,7 +1421,10 @@ function collectErrors(){
   if(quoteProvidedEl.value === 'Yes' && !document.getElementById('quoteNumber').value.trim()) errs.push({step:1, msg:'Quote number is required when a quote has been provided.'});
 
   if(Object.keys(tmRows).length === 0) errs.push({step:2, msg:'Add at least one test method.'});
-  Object.entries(tmRows).forEach(([id,t])=>{ if(!t.value || !t.value.trim()) errs.push({step:2, msg:`Test method ${id}: enter or select a test.`}); });
+  Object.entries(tmRows).forEach(([id,t])=>{
+    if(!t.value || !t.value.trim()) errs.push({step:2, msg:`Test method ${id}: select a test from the list.`});
+    else if(!t.matched) errs.push({step:2, msg:`Test method ${id}: "${t.value.trim()}" isn't a listed method. Click a result from the list, or remove the row and describe it in Remarks (Step 4).`});
+  });
 
   if(Object.keys(sampleRows).length === 0) errs.push({step:3, msg:'Add at least one sample.'});
   Object.entries(sampleRows).forEach(([id,s])=>{ if(!s.clientId.trim()) errs.push({step:3, msg:`Sample ${id}: enter a Client Sample ID.`}); });
